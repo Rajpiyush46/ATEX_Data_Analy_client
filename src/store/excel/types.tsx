@@ -1,0 +1,9 @@
+/**
+ * Excel Upload Action Types
+ */
+
+export const UPLOAD_EXCEL_REQUEST = "UPLOAD_EXCEL_REQUEST";
+
+export const UPLOAD_EXCEL_SUCCESS = "UPLOAD_EXCEL_SUCCESS";
+
+export const UPLOAD_EXCEL_FAILURE = "UPLOAD_EXCEL_FAILURE";
