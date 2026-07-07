@@ -5,6 +5,8 @@ import { useData } from "@/store/DataContext";
 import { getColumnStats, hasColumnData } from "@/utils/analytics";
 import { CATEGORY_CONFIG, getParametersByCategory } from "@/utils/schemaEngine";
 import { useEffect } from "react";
+import { getCurrentRequest } from "@/store/current/actions";
+import { getVoltageRequest } from "@/store/voltage/actions";
 
 import { useDispatch, useSelector } from "react-redux";
 
@@ -12,26 +14,57 @@ import { getVTRequest } from "@/store/vt/actions";
 
 export default function ElectricalPage() {
   const dispatch = useDispatch();
-  const vtCharts = useSelector((state: any) => state.vt?.charts);
+  const vtCharts = useSelector((state: any) => state.vt?.charts); // this is for vt
+  const currentCharts = useSelector((state: any) => state.current?.charts); // this id for current
 
+  const voltageCharts = useSelector((state: any) => state.voltage?.charts); // thisis  for voltage
+
+  // console for vt
   useEffect(() => {
     console.log("VT CHARTS STATE", vtCharts);
   }, [vtCharts]);
 
+  // console for current
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
+    console.log("VT CHARTS STATE", vtCharts);
+  }, [vtCharts]);
 
+  // All three  dispatch
+  useEffect(() => {
     for (let i = 1; i <= 9; i++) {
       dispatch(
         getVTRequest({
           vtName: `VT${i}`,
           filters: {
-            fromDate: "04-06-2026",  // hardcode  value as data not there in the execel
+            fromDate: "04-06-2026",
+          },
+        })
+      );
+    }
+
+    for (let i = 1; i <= 3; i++) {
+      dispatch(
+        getCurrentRequest({
+          currentName: `Current${i}`,
+          filters: {
+            fromDate: "04-06-2026",
+          },
+        })
+      );
+    }
+
+    for (let i = 1; i <= 3; i++) {
+      dispatch(
+        getVoltageRequest({
+          voltageName: `Voltage${i}`,
+          filters: {
+            fromDate: "04-06-2026",
           },
         })
       );
     }
   }, [dispatch]);
+
   const { data } = useData();
   if (!data) return null;
 
@@ -69,15 +102,32 @@ export default function ElectricalPage() {
   const insight = useMemo(() => {
     const parts = [];
     if (phaseVoltageParams.length >= 2) {
-      const avgs = phaseVoltageParams.map(p => getColumnStats(records, p.originalName).avg);
+      const avgs = phaseVoltageParams.map(
+        (p) => getColumnStats(records, p.originalName).avg
+      );
       const maxDiff = Math.max(...avgs) - Math.min(...avgs);
       const pctDiff = avgs[0] > 0 ? (maxDiff / Math.max(...avgs)) * 100 : 0;
-      if (pctDiff < 2) parts.push('Phase voltages are well-balanced with less than 2% deviation.');
-      else parts.push(`Phase voltage imbalance detected: ${pctDiff.toFixed(1)}% deviation across phases.`);
+      if (pctDiff < 2)
+        parts.push(
+          "Phase voltages are well-balanced with less than 2% deviation."
+        );
+      else
+        parts.push(
+          `Phase voltage imbalance detected: ${pctDiff.toFixed(1)}% deviation across phases.`
+        );
     }
-    if (vtParams.length > 0) parts.push(`${vtParams.length} voltage transformer channels available for analysis.`);
-    if (phaseCurrentParams.length > 0) parts.push(`${phaseCurrentParams.length} current phase measurements detected.`);
-    return parts.join(' ') || 'Upload data with electrical parameters to view detailed analysis.';
+    if (vtParams.length > 0)
+      parts.push(
+        `${vtParams.length} voltage transformer channels available for analysis.`
+      );
+    if (phaseCurrentParams.length > 0)
+      parts.push(
+        `${phaseCurrentParams.length} current phase measurements detected.`
+      );
+    return (
+      parts.join(" ") ||
+      "Upload data with electrical parameters to view detailed analysis."
+    );
   }, [records, vtParams, phaseVoltageParams, phaseCurrentParams]);
 
   const hasData = allParams.length > 0;
@@ -120,50 +170,64 @@ export default function ElectricalPage() {
       )}
 
       {/* Phase Voltages */}
+      {/* Phase Voltages */}
       {phaseVoltageParams.length > 0 && (
         <section className="mb-10">
           <h2 className="text-lg font-semibold text-[#0F172A] mb-1">
             Phase Voltage Analysis
           </h2>
+
           <p className="text-[13px] text-[#64748B] mb-6">
             Line-to-line voltage measurement across three-phase terminals.
           </p>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {phaseVoltageParams.map((param, i) => (
-              <ParameterModule
-                key={param.originalName}
-                columnSchema={param}
-                records={records}
-                delay={0.1 + i * 0.05}
-                chartType="area"
-                color={CATEGORY_CONFIG.phase_voltage.color}
-              />
-            ))}
+            {phaseVoltageParams.map((param, i) => {
+              const voltageKey = param.originalName.split("(")[0];
+
+              return (
+                <ParameterModule
+                  key={param.originalName}
+                  columnSchema={param}
+                  records={voltageCharts?.[voltageKey] || []}
+                  delay={0.1 + i * 0.05}
+                  chartType="area"
+                  color={CATEGORY_CONFIG.phase_voltage.color}
+                />
+              );
+            })}
           </div>
         </section>
       )}
 
+      {/* Phase Currents */}
       {/* Phase Currents */}
       {phaseCurrentParams.length > 0 && (
         <section className="mb-10">
           <h2 className="text-lg font-semibold text-[#0F172A] mb-1">
             Phase Current Analysis
           </h2>
+
           <p className="text-[13px] text-[#64748B] mb-6">
             Phase current flow analysis for load distribution and power factor
             assessment.
           </p>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {phaseCurrentParams.map((param, i) => (
-              <ParameterModule
-                key={param.originalName}
-                columnSchema={param}
-                records={records}
-                delay={0.1 + i * 0.05}
-                chartType="area"
-                color={CATEGORY_CONFIG.phase_current.color}
-              />
-            ))}
+            {phaseCurrentParams.map((param, i) => {
+              const currentKey = param.originalName.split("(")[0];
+
+              return (
+                <ParameterModule
+                  key={param.originalName}
+                  columnSchema={param}
+                  records={currentCharts?.[currentKey] || []}
+                  delay={0.1 + i * 0.05}
+                  chartType="area"
+                  color={CATEGORY_CONFIG.phase_current.color}
+                />
+              );
+            })}
           </div>
         </section>
       )}
