@@ -1,33 +1,68 @@
-import { useMemo } from 'react';
-import PageHeader from '@/components/ui/PageHeader';
-import ParameterModule from '@/components/ParameterModule';
-import { useData } from '@/store/DataContext';
-import { getColumnStats, hasColumnData } from '@/utils/analytics';
-import { CATEGORY_CONFIG, getParametersByCategory } from '@/utils/schemaEngine';
+import { useMemo } from "react";
+import PageHeader from "@/components/ui/PageHeader";
+import ParameterModule from "@/components/ParameterModule";
+import { useData } from "@/store/DataContext";
+import { getColumnStats, hasColumnData } from "@/utils/analytics";
+import { CATEGORY_CONFIG, getParametersByCategory } from "@/utils/schemaEngine";
+import { useEffect } from "react";
+
+import { useDispatch, useSelector } from "react-redux";
+
+import { getVTRequest } from "@/store/vt/actions";
 
 export default function ElectricalPage() {
+  const dispatch = useDispatch();
+  const vtCharts = useSelector((state: any) => state.vt?.charts);
+
+  useEffect(() => {
+    console.log("VT CHARTS STATE", vtCharts);
+  }, [vtCharts]);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+
+    for (let i = 1; i <= 9; i++) {
+      dispatch(
+        getVTRequest({
+          vtName: `VT${i}`,
+          filters: {
+            fromDate: "04-06-2026",  // hardcode  value as data not there in the execel
+          },
+        })
+      );
+    }
+  }, [dispatch]);
   const { data } = useData();
   if (!data) return null;
 
   const { records, schema } = data;
 
   // Get voltage transformer parameters
-  const vtParams = useMemo(() => 
-    getParametersByCategory(schema, 'voltage_transformer')
-      .filter(p => hasColumnData(records, p.originalName))
-  , [schema, records]);
+  const vtParams = useMemo(
+    () =>
+      getParametersByCategory(schema, "voltage_transformer").filter((p) =>
+        hasColumnData(records, p.originalName)
+      ),
+    [schema, records]
+  );
 
   // Get phase voltage parameters
-  const phaseVoltageParams = useMemo(() => 
-    getParametersByCategory(schema, 'phase_voltage')
-      .filter(p => hasColumnData(records, p.originalName))
-  , [schema, records]);
+  const phaseVoltageParams = useMemo(
+    () =>
+      getParametersByCategory(schema, "phase_voltage").filter((p) =>
+        hasColumnData(records, p.originalName)
+      ),
+    [schema, records]
+  );
 
   // Get phase current parameters
-  const phaseCurrentParams = useMemo(() => 
-    getParametersByCategory(schema, 'phase_current')
-      .filter(p => hasColumnData(records, p.originalName))
-  , [schema, records]);
+  const phaseCurrentParams = useMemo(
+    () =>
+      getParametersByCategory(schema, "phase_current").filter((p) =>
+        hasColumnData(records, p.originalName)
+      ),
+    [schema, records]
+  );
 
   const allParams = [...vtParams, ...phaseVoltageParams, ...phaseCurrentParams];
 
@@ -58,19 +93,28 @@ export default function ElectricalPage() {
       {/* Voltage Transformers */}
       {vtParams.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-lg font-semibold text-[#0F172A] mb-1">Voltage Transformers</h2>
-          <p className="text-[13px] text-[#64748B] mb-6">Individual VT channel analysis for transformer health monitoring.</p>
+          <h2 className="text-lg font-semibold text-[#0F172A] mb-1">
+            Voltage Transformers
+          </h2>
+
+          <p className="text-[13px] text-[#64748B] mb-6">
+            Individual VT channel analysis for transformer health monitoring.
+          </p>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {vtParams.map((param, i) => (
-              <ParameterModule
-                key={param.originalName}
-                columnSchema={param}
-                records={records}
-                delay={0.1 + i * 0.05}
-                chartType="line"
-                color={CATEGORY_CONFIG.voltage_transformer.color}
-              />
-            ))}
+            {vtParams.map((param, i) => {
+              const vtKey = param.originalName.split("(")[0];
+              return (
+                <ParameterModule
+                  key={param.originalName}
+                  columnSchema={param}
+                  records={vtCharts?.[vtKey] || []}
+                  delay={0.1 + i * 0.05}
+                  chartType="line"
+                  color={CATEGORY_CONFIG.voltage_transformer.color}
+                />
+              );
+            })}
           </div>
         </section>
       )}
@@ -78,8 +122,12 @@ export default function ElectricalPage() {
       {/* Phase Voltages */}
       {phaseVoltageParams.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-lg font-semibold text-[#0F172A] mb-1">Phase Voltage Analysis</h2>
-          <p className="text-[13px] text-[#64748B] mb-6">Line-to-line voltage measurement across three-phase terminals.</p>
+          <h2 className="text-lg font-semibold text-[#0F172A] mb-1">
+            Phase Voltage Analysis
+          </h2>
+          <p className="text-[13px] text-[#64748B] mb-6">
+            Line-to-line voltage measurement across three-phase terminals.
+          </p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {phaseVoltageParams.map((param, i) => (
               <ParameterModule
@@ -98,8 +146,13 @@ export default function ElectricalPage() {
       {/* Phase Currents */}
       {phaseCurrentParams.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-lg font-semibold text-[#0F172A] mb-1">Phase Current Analysis</h2>
-          <p className="text-[13px] text-[#64748B] mb-6">Phase current flow analysis for load distribution and power factor assessment.</p>
+          <h2 className="text-lg font-semibold text-[#0F172A] mb-1">
+            Phase Current Analysis
+          </h2>
+          <p className="text-[13px] text-[#64748B] mb-6">
+            Phase current flow analysis for load distribution and power factor
+            assessment.
+          </p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {phaseCurrentParams.map((param, i) => (
               <ParameterModule
@@ -117,7 +170,11 @@ export default function ElectricalPage() {
 
       {!hasData && (
         <div className="bg-white rounded-xl border border-border p-12 text-center">
-          <p className="text-[15px] text-[#64748B]">No electrical parameters found in the uploaded dataset. Ensure your file contains voltage transformer (VT1–VT9), voltage, or current columns.</p>
+          <p className="text-[15px] text-[#64748B]">
+            No electrical parameters found in the uploaded dataset. Ensure your
+            file contains voltage transformer (VT1–VT9), voltage, or current
+            columns.
+          </p>
         </div>
       )}
     </div>
