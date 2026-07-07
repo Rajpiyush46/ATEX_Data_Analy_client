@@ -22,8 +22,27 @@ export default function ParameterModule({
   color = "#2563EB",
 }: ParameterModuleProps) {
   const { originalName, unit, description } = columnSchema;
+  // need to check for the naming >> Ayush /Prateek/Piyush
+  const dataKey = useMemo(() => {
+    if (!records?.length) {
+      return originalName.split("(")[0];
+    }
 
-  const dataKey = originalName.split("(")[0];
+    const schemaKey = originalName
+      .split("(")[0]
+      .toLowerCase()
+      .replace(/[_\s]/g, "");
+
+    const matchedKey = Object.keys(records[0]).find(
+      (key) => key.toLowerCase().replace(/[_\s]/g, "") === schemaKey
+    );
+
+    return matchedKey || originalName.split("(")[0];
+  }, [records, originalName]);
+  
+  console.log("ORIGINAL NAME", originalName);
+  console.log("DATA KEY", dataKey);
+  console.log("FIRST RECORD", records?.[0]);
   const stats = useMemo(
     () => getColumnStats(records, dataKey),
     [records, dataKey]
