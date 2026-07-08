@@ -36,7 +36,7 @@ export default function ElectricalPage() {
         getVTRequest({
           vtName: `VT${i}`,
           filters: {
-            fromDate: "04-06-2026",
+            fromDate: "04-06-2026", //Hardcoded , need to get today's date
           },
         })
       );

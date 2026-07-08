@@ -40,6 +40,7 @@ export default function ParameterModule({
     return matchedKey || originalName.split("(")[0];
   }, [records, originalName]);
   
+
   console.log("ORIGINAL NAME", originalName);
   console.log("DATA KEY", dataKey);
   console.log("FIRST RECORD", records?.[0]);
@@ -116,3 +117,4 @@ export default function ParameterModule({
     </>
   );
 }
+ 

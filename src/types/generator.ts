@@ -17,7 +17,6 @@ export interface DataStats {
 }
 
 export interface AnalyticsData {
-  length: number;
   records: GeneratorRecord[];
   totalRecords: number;
   columns: string[];
