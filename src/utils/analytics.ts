@@ -4,11 +4,35 @@ import type { ColumnSchema } from '@/utils/schemaEngine';
 /**
  * Gets numeric values from records using original column name
  */
-export function getColumnValues(records: GeneratorRecord[], columnName: string): number[] {
+// export function getColumnValues(records: GeneratorRecord[], columnName: string): number[] {
+//   return records
+//     .map(r => r[columnName])
+//     .filter((v): v is number => typeof v === 'number' && !isNaN(v) && isFinite(v));
+// }
+
+export function getColumnValues(
+  records: GeneratorRecord[],
+  columnName: string
+): number[] {
   return records
-    .map(r => r[columnName])
-    .filter((v): v is number => typeof v === 'number' && !isNaN(v) && isFinite(v));
+    .map((r) => {
+      const value = r[columnName];
+
+      if (
+        value === null ||
+        value === undefined ||
+        value === ""
+      ) {
+        return NaN;
+      }
+
+      return Number(value);
+    })
+    .filter(
+      (v) => !isNaN(v) && isFinite(v)
+    );
 }
+
 
 /**
  * Computes comprehensive statistics for an array of values

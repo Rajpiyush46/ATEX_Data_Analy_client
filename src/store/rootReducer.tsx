@@ -22,6 +22,7 @@ import voltageReducer from "./voltage/reducer";
 import currentReducer from "./current/reducer";
 import ambientReducer from "./ambient/reducer";
 import performanceReducer from "./performance/reducer";
+import oilReducer from "./oil/reducer";
 
 const rootReducer = combineReducers({
   excel: excelReducer,
@@ -30,6 +31,7 @@ const rootReducer = combineReducers({
   current: currentReducer,
   ambient: ambientReducer,
   performance: performanceReducer,
+  oil: oilReducer,
 });
 
 export default rootReducer;

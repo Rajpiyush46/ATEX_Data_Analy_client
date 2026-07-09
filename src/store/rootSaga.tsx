@@ -17,6 +17,7 @@ import voltageSaga from "./voltage/sagas";
 import currentSaga from "./current/sagas";
 import ambientSaga from "./ambient/sagas";
 import performanceSaga from "./performance/sagas";
+import oilSaga from "./oil/sagas";
 
 export default function* rootSaga() {
   yield all([
@@ -25,7 +26,7 @@ export default function* rootSaga() {
     voltageSaga(),
     currentSaga(),
     ambientSaga(),
- 
     performanceSaga(),
+    oilSaga(),
   ]);
 }

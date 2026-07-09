@@ -49,13 +49,22 @@ export default function ParameterModule({
     [records, dataKey]
   );
 
-  // comment to me done why this is??? Ayush /Prateek
   const chartData = useMemo(() => {
-    return records.slice(0, 500).map((r: any, i: number) => ({
-      index: i + 1,
-      value: Number(r[dataKey]),
-    }));
-  }, [records, dataKey]);
+  return records.slice(0, 500).map((r: any) => ({
+    time:
+      r.Time_stamp ||
+      r.timestamp ||
+      r.TimeStamp ||
+      "",
+    value: Number(r[dataKey]),
+  }));
+}, [records, dataKey]);
+
+console.log(
+  "FINAL CHART DATA",
+  originalName,
+  chartData.slice(0, 5)
+);
 
   const [openModal, setOpenModal] = useState(false);
   const insight = useMemo(
@@ -68,25 +77,29 @@ export default function ParameterModule({
 
   return (
     <>
-      {/* Dashboard Chart */}
-      <div onClick={() => setOpenModal(true)} className="cursor-pointer">
-        <AnalyticsChart
-          title={originalName}
-          description={description || insight}
-          data={chartData}
-          dataKey="value"
-          xLabel="Sample"
-          yLabel={unit || ""}
-          type={chartType}
-          color={color}
-          min={stats.min}
-          max={stats.max}
-          avg={stats.avg}
-          variance={stats.variance}
-          unit={unit}
-          delay={delay}
-        />
-      </div>
+     {/* Dashboard Chart */}
+        <div
+          onClick={() => setOpenModal(true)}
+          className="cursor-pointer"
+        >
+          <AnalyticsChart
+            title={originalName}
+            description={description || insight}
+            data={chartData}
+            dataKey="value"
+            xKey="time"
+            xLabel="Time"
+            yLabel={unit || ""}
+            type={chartType}
+            color={color}
+            min={stats.min}
+            max={stats.max}
+            avg={stats.avg}
+            variance={stats.variance}
+            unit={unit}
+            delay={delay}
+          />
+        </div>
 
       {/* Modal */}
       <ChartModal
@@ -98,20 +111,21 @@ export default function ParameterModule({
           <div className="text-center py-10 text-gray-500">No Data Found</div>
         ) : (
           <AnalyticsChart
-            title={originalName}
-            description={description || insight}
-            data={chartData}
-            dataKey="value"
-            xLabel="Sample"
-            yLabel={unit || ""}
-            type={chartType}
-            color={color}
-            min={stats.min}
-            max={stats.max}
-            avg={stats.avg}
-            variance={stats.variance}
-            unit={unit}
-          />
+          title={originalName}
+          description={description || insight}
+          data={chartData}
+          dataKey="value"
+          xKey="time"
+          xLabel="Time"
+          yLabel={unit || ""}
+          type={chartType}
+          color={color}
+          min={stats.min}
+          max={stats.max}
+          avg={stats.avg}
+          variance={stats.variance}
+          unit={unit}
+        />
         )}
       </ChartModal>
     </>
