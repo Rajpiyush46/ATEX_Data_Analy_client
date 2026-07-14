@@ -18,7 +18,7 @@ import currentSaga from "./current/sagas";
 import ambientSaga from "./ambient/sagas";
 import performanceSaga from "./performance/sagas";
 import oilSaga from "./oil/sagas";
-
+import watchComparison from "./comparison/sagas";
 export default function* rootSaga() {
   yield all([
     excelSaga(),
@@ -28,5 +28,6 @@ export default function* rootSaga() {
     ambientSaga(),
     performanceSaga(),
     oilSaga(),
+    watchComparison(),
   ]);
 }

@@ -23,6 +23,7 @@ import currentReducer from "./current/reducer";
 import ambientReducer from "./ambient/reducer";
 import performanceReducer from "./performance/reducer";
 import oilReducer from "./oil/reducer";
+import comparisonReducer from "./comparison/reducer";
 
 const rootReducer = combineReducers({
   excel: excelReducer,
@@ -32,6 +33,7 @@ const rootReducer = combineReducers({
   ambient: ambientReducer,
   performance: performanceReducer,
   oil: oilReducer,
+  comparison: comparisonReducer,
 });
 
 export default rootReducer;
