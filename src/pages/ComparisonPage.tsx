@@ -9,8 +9,8 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  LineChart,
-  Line,
+  ScatterChart,
+  Scatter,
   ReferenceLine,
   Legend,
 } from "recharts";
@@ -101,16 +101,9 @@ export default function ComparisonPage() {
     { originalName: "Ambient pressure" },
     { originalName: "Vibration" },
   ];
-  const testConditions: string[] = [
-  "No Load",
-  "Half Load",
-  "Full Load",
-];
+  const testConditions: string[] = ["No Load", "Half Load", "Full Load"];
 
-  const operatingModes: string[] = [
-  "Auto",
-  "Manual",
-];
+  const operatingModes: string[] = ["Auto", "Manual"];
 
   // const testConditions = useMemo(() => {
   //   const values = new Set<string>();
@@ -291,8 +284,7 @@ export default function ComparisonPage() {
             </h2>
 
             <ResponsiveContainer width="100%" height={600}>
-              <LineChart
-                data={chartData}
+              <ScatterChart
                 margin={{
                   top: 30,
                   right: 40,
@@ -303,9 +295,10 @@ export default function ComparisonPage() {
                 <CartesianGrid strokeDasharray="4 4" stroke="#D1D5DB" />
 
                 <XAxis
-                  tick={{ fill: "#1E293B", fontSize: 14 }}
                   type="number"
                   dataKey="x"
+                  tick={{ fill: "#1E293B", fontSize: 14 }}
+                  domain={["dataMin - 5", "dataMax + 5"]}
                   label={{
                     value: xParameter,
                     position: "bottom",
@@ -317,6 +310,10 @@ export default function ComparisonPage() {
                 />
 
                 <YAxis
+                  type="number"
+                  dataKey="y"
+                  tick={{ fill: "#1E293B", fontSize: 14 }}
+                  domain={["dataMin - 5", "dataMax + 5"]}
                   label={{
                     value: yParameter,
                     angle: -90,
@@ -351,32 +348,25 @@ export default function ComparisonPage() {
                   </>
                 )}
 
-                <Line
-                  type="monotone"
-                  dataKey="y"
-                  name="Live Data"
-                  stroke="#2563EB"
-                  strokeWidth={3}
-                  dot={{
-                    r: 6,
-                    fill: "#2563EB",
-                  }}
-                  activeDot={{
-                    r: 9,
-                    fill: "red",
-                  }}
+                <Scatter
+                  name="Comparison Data"
+                  data={chartData}
+                  fill="#2563EB"
+                  shape="circle"
                   onClick={(point: any) => {
-                    if (point?.raw) {
-                      setSelectedPoint(point.raw);
+                    const selected = point?.payload;
 
-                      setSelectedCoords({
-                        x: point.x,
-                        y: point.y,
-                      });
-                    }
+                    if (!selected) return;
+
+                    setSelectedPoint(selected);
+
+                    setSelectedCoords({
+                      x: selected.x,
+                      y: selected.y,
+                    });
                   }}
                 />
-              </LineChart>
+              </ScatterChart>
             </ResponsiveContainer>
 
             {selectedCoords && (
@@ -453,13 +443,12 @@ export default function ComparisonPage() {
           </div>
           {selectedPoint && (
             <div className="mb-4 p-3 bg-danger-bg border border-[#FECACA] rounded-lg">
-              <div className="text-xs text-[#B91C1C] font-medium">
+              {/* <div className="text-xs text-[#B91C1C] font-medium">
                 Relationship Insight
-              </div>
+              </div> */}
 
               <div className="text-sm text-[#7F1D1D] mt-1">
-                At {String(selectedPoint[xParameter])} →{" "}
-                {String(selectedPoint[yParameter])}
+                At {selectedPoint?.x}→{selectedPoint?.y}
               </div>
             </div>
           )}
@@ -468,16 +457,12 @@ export default function ComparisonPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-[#64748B]">X Value</span>
-                <span className="font-semibold">
-                  {String(selectedPoint[xParameter])}
-                </span>
+                <span className="font-semibold">{selectedPoint?.x}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-[#64748B]">Y Value</span>
-                <span className="font-semibold">
-                  {String(selectedPoint[yParameter])}
-                </span>
+                <span className="font-semibold">{selectedPoint?.y}</span>
               </div>
 
               <hr />
