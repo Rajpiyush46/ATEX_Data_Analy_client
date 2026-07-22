@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import PageHeader from "@/components/ui/PageHeader";
-import { useData } from "@/store/DataContext";
+// import { useData } from "@/store/DataContext";
 import {
   ResponsiveContainer,
   CartesianGrid,
@@ -40,7 +40,7 @@ const CustomTooltip = ({ active, payload, xParameter, yParameter }: any) => {
 };
 
 export default function ComparisonPage() {
-  const { data } = useData();
+  // const { data } = useData();
 
   const dispatch = useDispatch();
 
@@ -60,7 +60,7 @@ export default function ComparisonPage() {
     y: number;
   } | null>(null);
 
-  if (!data) return null;
+  // if (!data) return null;
   const parameterMapping: Record<string, string> = {
     "VT1(V)": "VT1",
     "VT2(V)": "VT2",
@@ -84,89 +84,71 @@ export default function ComparisonPage() {
     Vibration: "vibration",
   };
 
-  const numericParameters = data.numericParameters;
+  const numericParameters = [
+    { originalName: "VT1(V)" },
+    { originalName: "VT2(V)" },
+    { originalName: "VT3(V)" },
+    { originalName: "VT4(V)" },
+    { originalName: "VT5(V)" },
+    { originalName: "VT6(V)" },
+    { originalName: "VT7(V)" },
+    { originalName: "VT8(V)" },
+    { originalName: "VT9(V)" },
+    { originalName: "BUG Speed" },
+    { originalName: "BUG Torque" },
+    { originalName: "Ambient temperature" },
+    { originalName: "Ambient humidity" },
+    { originalName: "Ambient pressure" },
+    { originalName: "Vibration" },
+  ];
+  const testConditions: string[] = [
+  "No Load",
+  "Half Load",
+  "Full Load",
+];
 
-  const testConditions = useMemo(() => {
-    const values = new Set<string>();
+  const operatingModes: string[] = [
+  "Auto",
+  "Manual",
+];
 
-    data.records.forEach((record) => {
-      const value = String(record["Test_condition"] ?? "").trim();
-      if (value) values.add(value);
-    });
+  // const testConditions = useMemo(() => {
+  //   const values = new Set<string>();
 
-    return [...values];
-  }, [data]);
+  //   data.records.forEach((record) => {
+  //     const value = String(record["Test_condition"] ?? "").trim();
+  //     if (value) values.add(value);
+  //   });
 
-  const operatingModes = useMemo(() => {
-    const values = new Set<string>();
+  //   return [...values];
+  // }, [data]);
 
-    data.records.forEach((record) => {
-      const value = String(record["Operating_mode"] ?? "").trim();
-      if (value) values.add(value);
-    });
+  // const operatingModes = useMemo(() => {
+  //   const values = new Set<string>();
 
-    return [...values];
-  }, [data]);
-useEffect(() => {
-  if (xParameter && yParameter) {
+  //   data.records.forEach((record) => {
+  //     const value = String(record["Operating_mode"] ?? "").trim();
+  //     if (value) values.add(value);
+  //   });
 
-    console.log("X:", xParameter);
-    console.log("Y:", yParameter);
-    console.log("Dispatching API...");
+  //   return [...values];
+  // }, [data]);
+  useEffect(() => {
+    if (xParameter && yParameter) {
+      console.log("X:", xParameter);
+      console.log("Y:", yParameter);
+      console.log("Dispatching API...");
 
-    dispatch(
-      getComparison({
-        xParameter:
-          parameterMapping[xParameter] || xParameter,
+      dispatch(
+        getComparison({
+          xParameter: parameterMapping[xParameter] || xParameter,
 
-        yParameter:
-          parameterMapping[yParameter] || yParameter,
-      })
-    );
-  }
-}, [xParameter, yParameter]);
+          yParameter: parameterMapping[yParameter] || yParameter,
+        })
+      );
+    }
+  }, [xParameter, yParameter]);
 
-  // const chartData = useMemo(() => {
-  //   if (!xParameter || !yParameter) return [];
-
-  //   return data.records
-  //     .filter((record) => {
-  //       const x = Number(record[xParameter]);
-  //       const y = Number(record[yParameter]);
-
-  //       if (isNaN(x) || isNaN(y)) return false;
-
-  //       if (
-  //         testCondition !== "all" &&
-  //         record["Test_condition"] !== testCondition
-  //       ) {
-  //         return false;
-  //       }
-
-  //       if (
-  //         operatingMode !== "all" &&
-  //         record["Operating_mode"] !== operatingMode
-  //       ) {
-  //         return false;
-  //       }
-
-  //       return true;
-  //     })
-  //     .map((record) => ({
-  //       x: Number(record[xParameter]),
-  //       y: Number(record[yParameter]),
-  //       raw: record,
-  //     }))
-  //     .sort((a, b) => a.x - b.x);
-  // }, [data, xParameter, yParameter, testCondition, operatingMode]);
-  // const correlation = useMemo(() => {
-  //   if (chartData.length < 2) return 0;
-
-  //   return computeCorrelation(
-  //     chartData.map((p) => p.x),
-  //     chartData.map((p) => p.y)
-  //   );
-  // }, [chartData]);
   const chartData = comparisonData || [];
   const correlation = useMemo(() => {
     if (chartData.length < 2) return 0;

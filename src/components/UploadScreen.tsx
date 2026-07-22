@@ -11,13 +11,26 @@ import {
   BarChart3,
   Cpu,
 } from "lucide-react";
-import { useData } from "@/store/DataContext";
-import { parseExcelFile } from "@/utils/excelParser";
 import { useDispatch } from "react-redux";
 import { uploadExcelRequest } from "@/store/excel/actions";
+import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function UploadScreen() {
-  const { setData } = useData();
+  // const { setData } = useData();
+  
+
+const excelState = useSelector(
+  (state: any) => state.excel
+);
+
+useEffect(() => {
+  if (excelState?.data?.data?.success) {
+
+    toast.success("Excel Uploaded Successfully");
+  }
+}, [excelState?.data]);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,39 +40,20 @@ export default function UploadScreen() {
   const handleFile = useCallback(
     async (file: File) => {
       const validExts = [".xlsx", ".xls", ".csv"];
+
       const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+
       if (!validExts.includes(ext)) {
         setError("Please upload an Excel file (.xlsx, .xls) or CSV file.");
         return;
       }
+
       setError(null);
-      setIsProcessing(true);
       setProgress(0);
-      try {
-        /**
-         * Upload Excel to Backend
-         */
-        dispatch(uploadExcelRequest(file));
-        setProgress(20);
-        await new Promise((r) => setTimeout(r, 300));
-        setProgress(40);
-        /**
-         * Existing Frontend Processing
-         */
-        const result = await parseExcelFile(file);
-        setProgress(70);
-        await new Promise((r) => setTimeout(r, 200));
-        setProgress(90);
-        await new Promise((r) => setTimeout(r, 200));
-        setProgress(100);
-        await new Promise((r) => setTimeout(r, 300));
-        setData(result);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to parse file");
-        setIsProcessing(false);
-      }
+
+      dispatch(uploadExcelRequest(file));
     },
-    [setData, dispatch]
+    [dispatch]
   );
 
   const handleDrop = useCallback(

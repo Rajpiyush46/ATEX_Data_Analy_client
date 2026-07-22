@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import ParameterModule from "@/components/ParameterModule";
-import { useData } from "@/store/DataContext";
+// import { useData } from "@/store/DataContext";
 import { getColumnStats, hasColumnData } from "@/utils/analytics";
 import { CATEGORY_CONFIG, getParametersByCategory } from "@/utils/schemaEngine";
 import { useEffect } from "react";
@@ -65,72 +65,175 @@ export default function ElectricalPage() {
     }
   }, [dispatch]);
 
-  const { data } = useData();
-  if (!data) return null;
+  // const { data } = useData();
+  // if (!data) return null;
 
-  const { records, schema } = data;
+  // const { records, schema } = data;
 
   // Get voltage transformer parameters
-  const vtParams = useMemo(
-    () =>
-      getParametersByCategory(schema, "voltage_transformer").filter((p) =>
-        hasColumnData(records, p.originalName)
-      ),
-    [schema, records]
-  );
+  // const vtParams = useMemo(
+  //   () =>
+  //     getParametersByCategory(schema, "voltage_transformer").filter((p) =>
+  //       hasColumnData(records, p.originalName)
+  //     ),
+  //   [schema, records]
+  // );
 
   // Get phase voltage parameters
-  const phaseVoltageParams = useMemo(
-    () =>
-      getParametersByCategory(schema, "phase_voltage").filter((p) =>
-        hasColumnData(records, p.originalName)
-      ),
-    [schema, records]
-  );
+  // const phaseVoltageParams = useMemo(
+  //   () =>
+  //     getParametersByCategory(schema, "phase_voltage").filter((p) =>
+  //       hasColumnData(records, p.originalName)
+  //     ),
+  //   [schema, records]
+  // );
 
   // Get phase current parameters
-  const phaseCurrentParams = useMemo(
-    () =>
-      getParametersByCategory(schema, "phase_current").filter((p) =>
-        hasColumnData(records, p.originalName)
-      ),
-    [schema, records]
-  );
+  // const phaseCurrentParams = useMemo(
+  //   () =>
+  //     getParametersByCategory(schema, "phase_current").filter((p) =>
+  //       hasColumnData(records, p.originalName)
+  //     ),
+  //   [schema, records]
+  // );
 
-  const allParams = [...vtParams, ...phaseVoltageParams, ...phaseCurrentParams];
+  // const allParams = [...vtParams, ...phaseVoltageParams, ...phaseCurrentParams];
 
-  const insight = useMemo(() => {
-    const parts = [];
-    if (phaseVoltageParams.length >= 2) {
-      const avgs = phaseVoltageParams.map(
-        (p) => getColumnStats(records, p.originalName).avg
-      );
-      const maxDiff = Math.max(...avgs) - Math.min(...avgs);
-      const pctDiff = avgs[0] > 0 ? (maxDiff / Math.max(...avgs)) * 100 : 0;
-      if (pctDiff < 2)
-        parts.push(
-          "Phase voltages are well-balanced with less than 2% deviation."
-        );
-      else
-        parts.push(
-          `Phase voltage imbalance detected: ${pctDiff.toFixed(1)}% deviation across phases.`
-        );
-    }
-    if (vtParams.length > 0)
-      parts.push(
-        `${vtParams.length} voltage transformer channels available for analysis.`
-      );
-    if (phaseCurrentParams.length > 0)
-      parts.push(
-        `${phaseCurrentParams.length} current phase measurements detected.`
-      );
-    return (
-      parts.join(" ") ||
-      "Upload data with electrical parameters to view detailed analysis."
-    );
-  }, [records, vtParams, phaseVoltageParams, phaseCurrentParams]);
+  // const insight = useMemo(() => {
+  //   const parts = [];
+  //   if (phaseVoltageParams.length >= 2) {
+  //     const avgs = phaseVoltageParams.map(
+  //       (p) => getColumnStats(records, p.originalName).avg
+  //     );
+  //     const maxDiff = Math.max(...avgs) - Math.min(...avgs);
+  //     const pctDiff = avgs[0] > 0 ? (maxDiff / Math.max(...avgs)) * 100 : 0;
+  //     if (pctDiff < 2)
+  //       parts.push(
+  //         "Phase voltages are well-balanced with less than 2% deviation."
+  //       );
+  //     else
+  //       parts.push(
+  //         `Phase voltage imbalance detected: ${pctDiff.toFixed(1)}% deviation across phases.`
+  //       );
+  //   }
+  //   if (vtParams.length > 0)
+  //     parts.push(
+  //       `${vtParams.length} voltage transformer channels available for analysis.`
+  //     );
+  //   if (phaseCurrentParams.length > 0)
+  //     parts.push(
+  //       `${phaseCurrentParams.length} current phase measurements detected.`
+  //     );
+  //   return (
+  //     parts.join(" ") ||
+  //     "Upload data with electrical parameters to view detailed analysis."
+  //   );
+  // }, [records, vtParams, phaseVoltageParams, phaseCurrentParams]);
+  const vtParams = [
+    {
+      originalName: "VT1(V)",
+      unit: "V",
+      description: "VT1 Analysis",
+      normalizedKey: "VT1",
+    },
+    {
+      originalName: "VT2(V)",
+      unit: "V",
+      description: "VT2 Analysis",
+      normalizedKey: "VT2",
+    },
+    {
+      originalName: "VT3(V)",
+      unit: "V",
+      description: "VT3 Analysis",
+      normalizedKey: "VT3",
+    },
+    {
+      originalName: "VT4(V)",
+      unit: "V",
+      description: "VT4 Analysis",
+      normalizedKey: "VT4",
+    },
+    {
+      originalName: "VT5(V)",
+      unit: "V",
+      description: "VT5 Analysis",
+      normalizedKey: "VT5",
+    },
+    {
+      originalName: "VT6(V)",
+      unit: "V",
+      description: "VT6 Analysis",
+      normalizedKey: "VT6",
+    },
+    {
+      originalName: "VT7(V)",
+      unit: "V",
+      description: "VT7 Analysis",
+      normalizedKey: "VT7",
+    },
+    {
+      originalName: "VT8(V)",
+      unit: "V",
+      description: "VT8 Analysis",
+      normalizedKey: "VT8",
+    },
+    {
+      originalName: "VT9(V)",
+      unit: "V",
+      description: "VT9 Analysis",
+      normalizedKey: "VT9",
+    },
+  ];
 
-  const hasData = allParams.length > 0;
+  const phaseVoltageParams = [
+    {
+      originalName: "Voltage1(V)",
+      unit: "V",
+      description: "Voltage 1",
+      normalizedKey: "Voltage1",
+    },
+    {
+      originalName: "Voltage2(V)",
+      unit: "V",
+      description: "Voltage 2",
+      normalizedKey: "Voltage2",
+    },
+    {
+      originalName: "Voltage3(V)",
+      unit: "V",
+      description: "Voltage 3",
+      normalizedKey: "Voltage3",
+    },
+  ];
+
+  const phaseCurrentParams = [
+    {
+      originalName: "Current1(A)",
+      unit: "A",
+      description: "Current 1",
+      normalizedKey: "Current1",
+    },
+    {
+      originalName: "Current2(A)",
+      unit: "A",
+      description: "Current 2",
+      normalizedKey: "Current2",
+    },
+    {
+      originalName: "Current3(A)",
+      unit: "A",
+      description: "Current 3",
+      normalizedKey: "Current3",
+    },
+  ];
+  const insight =
+    "Electrical parameters loaded from backend APIs. VT, Voltage and Current charts are displayed dynamically.";
+
+  const hasData =
+    Object.keys(vtCharts || {}).length > 0 ||
+    Object.keys(voltageCharts || {}).length > 0 ||
+    Object.keys(currentCharts || {}).length > 0;
 
   return (
     <div>
@@ -157,7 +260,7 @@ export default function ElectricalPage() {
               return (
                 <ParameterModule
                   key={param.originalName}
-                  columnSchema={param}
+                  columnSchema={param as any}
                   records={vtCharts?.[vtKey] || []}
                   delay={0.1 + i * 0.05}
                   chartType="line"
@@ -188,7 +291,7 @@ export default function ElectricalPage() {
               return (
                 <ParameterModule
                   key={param.originalName}
-                  columnSchema={param}
+                  columnSchema={param as any}
                   records={voltageCharts?.[voltageKey] || []}
                   delay={0.1 + i * 0.05}
                   chartType="area"
@@ -220,7 +323,7 @@ export default function ElectricalPage() {
               return (
                 <ParameterModule
                   key={param.originalName}
-                  columnSchema={param}
+                  columnSchema={param as any}
                   records={currentCharts?.[currentKey] || []}
                   delay={0.1 + i * 0.05}
                   chartType="area"

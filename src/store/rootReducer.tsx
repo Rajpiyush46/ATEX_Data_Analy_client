@@ -24,6 +24,7 @@ import ambientReducer from "./ambient/reducer";
 import performanceReducer from "./performance/reducer";
 import oilReducer from "./oil/reducer";
 import comparisonReducer from "./comparison/reducer";
+import overviewReducer from "./overview/reducer";
 
 const rootReducer = combineReducers({
   excel: excelReducer,
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
   performance: performanceReducer,
   oil: oilReducer,
   comparison: comparisonReducer,
+  overview: overviewReducer,
 });
 
 export default rootReducer;

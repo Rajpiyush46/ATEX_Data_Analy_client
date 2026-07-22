@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import PageHeader from "@/components/ui/PageHeader";
 import ParameterModule from "@/components/ParameterModule";
 import KPICard from "@/components/ui/KPICard";
-import { useData } from "@/store/DataContext";
+// import { useData } from "@/store/DataContext";
 import {
   getColumnStats,
   getColumnValues,
@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAmbientRequest } from "@/store/ambient/actions";
 
 export default function EnvironmentPage() {
-  const { data } = useData();
+  // const { data } = useData();
   const dispatch = useDispatch();
 
   const ambientCharts = useSelector((state: any) => state.ambient?.charts);
@@ -50,83 +50,105 @@ export default function EnvironmentPage() {
       })
     );
   }, [dispatch]);
-  if (!data) return null;
+  // if (!data) return null;
 
-  const { records, schema } = data;
+  // const { records, schema } = data;
 
   // Get environmental parameters
-  const envParams = useMemo(
-    () =>
-      getParametersByCategory(schema, "environmental").filter((p) =>
-        hasColumnData(records, p.originalName)
-      ),
-    [schema, records]
-  );
+  // const envParams = useMemo(
+  //   () =>
+  //     getParametersByCategory(schema, "environmental").filter((p) =>
+  //       hasColumnData(records, p.originalName)
+  //     ),
+  //   [schema, records]
+  // );
+  const envParams = [
+    {
+      originalName: "Ambient temperature",
+      normalizedKey: "ambient_temperature",
+    },
+    {
+      originalName: "Ambient humidity",
+      normalizedKey: "ambient_humidity",
+    },
+    {
+      originalName: "Ambient pressure",
+      normalizedKey: "ambient_pressure",
+    },
+  ];
 
   // Find specific parameters these shpuld be taken form the contsraints.js
-  const tempParam = envParams.find(
-    (p) => p.normalizedKey === "ambient_temperature"
-  );
-  const humidityParam = envParams.find(
-    (p) => p.normalizedKey === "ambient_humidity"
-  );
-  const pressureParam = envParams.find(
-    (p) => p.normalizedKey === "ambient_pressure"
-  );
+  // const tempParam = envParams.find(
+  //   (p) => p.normalizedKey === "ambient_temperature"
+  // );
+  // const humidityParam = envParams.find(
+  //   (p) => p.normalizedKey === "ambient_humidity"
+  // );
+  // const pressureParam = envParams.find(
+  //   (p) => p.normalizedKey === "ambient_pressure"
+  // );
+  const tempParam = envParams[0];
+  const humidityParam = envParams[1];
+  const pressureParam = envParams[2];
 
-  const tempStats = tempParam
-    ? getColumnStats(records, tempParam.originalName)
-    : null;
-  const humidityStats = humidityParam
-    ? getColumnStats(records, humidityParam.originalName)
-    : null;
-  const pressureStats = pressureParam
-    ? getColumnStats(records, pressureParam.originalName)
-    : null;
+  // const tempStats = tempParam
+  //   ? getColumnStats(records, tempParam.originalName)
+  //   : null;
+  // const humidityStats = humidityParam
+  //   ? getColumnStats(records, humidityParam.originalName)
+  //   : null;
+  // const pressureStats = pressureParam
+  //   ? getColumnStats(records, pressureParam.originalName)
+  //   : null;
+  const tempStats = { avg: 0 };
+  const humidityStats = { avg: 0 };
+  const pressureStats = { avg: 0 };
 
   // Check correlation with speed if available
-  const speedCorrelation = useMemo(() => {
-    if (!tempParam) return null;
-    const performanceParams = getParametersByCategory(schema, "performance");
-    const speedParam = performanceParams.find(
-      (p) => p.normalizedKey === "speed"
-    );
-    if (!speedParam || !hasColumnData(records, speedParam.originalName))
-      return null;
+  // const speedCorrelation = useMemo(() => {
+  //   if (!tempParam) return null;
+  //   const performanceParams = getParametersByCategory(schema, "performance");
+  //   const speedParam = performanceParams.find(
+  //     (p) => p.normalizedKey === "speed"
+  //   );
+  //   if (!speedParam || !hasColumnData(records, speedParam.originalName))
+  //     return null;
 
-    const tempVals = getColumnValues(records, tempParam.originalName);
-    const speedVals = getColumnValues(records, speedParam.originalName);
-    return computeCorrelation(tempVals, speedVals);
-  }, [records, schema, tempParam]);
+  //   const tempVals = getColumnValues(records, tempParam.originalName);
+  //   const speedVals = getColumnValues(records, speedParam.originalName);
+  //   return computeCorrelation(tempVals, speedVals);
+  // }, [records, schema, tempParam]);
+  const speedCorrelation = null;
 
-  const insight = useMemo(() => {
-    const parts = [];
-    if (tempStats) {
-      parts.push(
-        `Ambient temperature range: ${tempStats.min.toFixed(1)}°C to ${tempStats.max.toFixed(1)}°C (avg: ${tempStats.avg.toFixed(1)}°C).`
-      );
-    }
-    if (speedCorrelation !== null) {
-      const abs = Math.abs(speedCorrelation);
-      if (abs > 0.5)
-        parts.push(
-          `Strong ${speedCorrelation > 0 ? "positive" : "negative"} correlation (${speedCorrelation.toFixed(2)}) between temperature and speed.`
-        );
-    }
-    if (humidityStats && humidityStats.avg > 70) {
-      parts.push(
-        "High humidity conditions detected — monitor for moisture ingress."
-      );
-    }
-    if (envParams.length === 0) {
-      parts.push(
-        "Upload data with environmental parameters for impact analysis."
-      );
-    }
-    return parts.join(" ");
-  }, [tempStats, humidityStats, speedCorrelation, envParams]);
-
-  const hasData = envParams.length > 0;
+  // const insight = useMemo(() => {
+  //   const parts = [];
+  //   if (tempStats) {
+  //     parts.push(
+  //       `Ambient temperature range: ${tempStats.min.toFixed(1)}°C to ${tempStats.max.toFixed(1)}°C (avg: ${tempStats.avg.toFixed(1)}°C).`
+  //     );
+  //   }
+  //   if (speedCorrelation !== null) {
+  //     const abs = Math.abs(speedCorrelation);
+  //     if (abs > 0.5)
+  //       parts.push(
+  //         `Strong ${speedCorrelation > 0 ? "positive" : "negative"} correlation (${speedCorrelation.toFixed(2)}) between temperature and speed.`
+  //       );
+  //   }
+  //   if (humidityStats && humidityStats.avg > 70) {
+  //     parts.push(
+  //       "High humidity conditions detected — monitor for moisture ingress."
+  //     );
+  //   }
+  //   if (envParams.length === 0) {
+  //     parts.push(
+  //       "Upload data with environmental parameters for impact analysis."
+  //     );
+  //   }
+  //   return parts.join(" ");
+  // }, [tempStats, humidityStats, speedCorrelation, envParams]);
+  const insight =
+    "Environmental analytics loaded from backend APIs for Temperature, Humidity and Pressure.";
+  const hasData = Object.keys(ambientCharts || {}).length > 0;
 
   return (
     <div>
@@ -144,7 +166,7 @@ export default function EnvironmentPage() {
               value={formatNumber(tempStats.avg)}
               unit="°C"
               icon={Thermometer}
-              color="#DC2626"  // check the css   ( no inline css)
+              color="#DC2626" // check the css   ( no inline css)
               delay={0.1}
             />
           )}
@@ -180,7 +202,7 @@ export default function EnvironmentPage() {
           return (
             <ParameterModule
               key={param.originalName}
-              columnSchema={param}
+              columnSchema={param as any}
               records={ambientCharts?.[ambientKey] || []}
               delay={0.15 + i * 0.05}
               chartType="area"
