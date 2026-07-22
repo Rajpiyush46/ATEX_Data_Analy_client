@@ -14,8 +14,8 @@ import {
 import { useDispatch } from "react-redux";
 import { uploadExcelRequest } from "@/store/excel/actions";
 import { useSelector } from "react-redux";
-import { useEffect } from "react";
-import { toast } from "react-toastify";
+// import { useEffect } from "react";
+// import { toast } from "react-toastify";
 
 export default function UploadScreen() {
   // const { setData } = useData();
@@ -25,12 +25,12 @@ const excelState = useSelector(
   (state: any) => state.excel
 );
 
-useEffect(() => {
-  if (excelState?.data?.data?.success) {
+// useEffect(() => {
+//   if (excelState?.data?.data?.success) {
 
-    toast.success("Excel Uploaded Successfully");
-  }
-}, [excelState?.data]);
+//     toast.success("Excel Uploaded Successfully");
+//   }
+// }, [excelState?.data]);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
