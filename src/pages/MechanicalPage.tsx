@@ -1,82 +1,81 @@
-import { useMemo } from 'react';
+//import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import PageHeader from '@/components/ui/PageHeader';
-import ParameterModule from '@/components/ParameterModule';
 import AnalyticsChart from '@/components/ui/AnalyticsChart';
 import KPICard from '@/components/ui/KPICard';
-import { useData } from '@/store/DataContext';
-import { getColumnStats, getColumnValues, hasColumnData, detectAnomalies, formatNumber } from '@/utils/analytics';
-import { CATEGORY_CONFIG, getParametersByCategory } from '@/utils/schemaEngine';
+//import { useData } from '@/store/DataContext';
+// import { getColumnStats, getColumnValues, hasColumnData, detectAnomalies, formatNumber } from '@/utils/analytics';
+// import { CATEGORY_CONFIG, getParametersByCategory } from '@/utils/schemaEngine';
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+import {
+getMechanicalDashboardRequest,
+} from "@/store/mechanical/actions";
 import { Activity, AlertTriangle, BarChart3, TrendingUp } from 'lucide-react';
 
 export default function MechanicalPage() {
-  const { data } = useData();
-  if (!data) return null;
+  const dispatch = useDispatch();
 
-  const { records, schema } = data;
+  const {
+    dashboard,
+    loading,
+    error,
+  } = useSelector(
+    (state: any) => state.mechanical
+  );
 
-  // Get mechanical parameters
-  const mechParams = useMemo(() => 
-    getParametersByCategory(schema, 'mechanical')
-      .filter(p => hasColumnData(records, p.originalName))
-  , [schema, records]);
+  useEffect(() => {
+    dispatch(
+      getMechanicalDashboardRequest({})
+    );
+  }, [dispatch]);
 
-  // Find vibration parameter
-  const vibParam = mechParams.find(p => p.normalizedKey === 'vibration');
-  const vibStats = vibParam ? getColumnStats(records, vibParam.originalName) : null;
-  const vibValues = vibParam ? getColumnValues(records, vibParam.originalName) : [];
-  const anomalies = useMemo(() => detectAnomalies(vibValues), [vibValues]);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-  // Distribution bins
-  const distData = useMemo(() => {
-    if (!vibStats || vibValues.length === 0) return [];
-    const bins = 20;
-    const range = vibStats.max - vibStats.min;
-    if (range === 0) return [{ range: vibStats.min.toFixed(1), Count: vibValues.length }];
-    const binWidth = range / bins;
-    const counts = new Array(bins).fill(0);
-    vibValues.forEach((v: number) => {
-      const idx = Math.min(Math.floor((v - vibStats.min) / binWidth), bins - 1);
-      counts[idx]++;
-    });
-    return counts.map((c, i) => ({
-      range: `${(vibStats.min + i * binWidth).toFixed(1)}`,
-      Count: c,
-    }));
-  }, [vibValues, vibStats]);
+  if (error) {
+    return <div>{error}</div>;
+  }
 
-  // Peak detection
-  const peakData = useMemo(() => {
-    if (!vibStats || vibValues.length === 0) return [];
-    const peaks: Record<string, unknown>[] = [];
-    for (let i = 1; i < Math.min(vibValues.length, 500) - 1; i++) {
-      if (vibValues[i] > vibValues[i - 1] && vibValues[i] > vibValues[i + 1]) {
-        if (vibValues[i] > vibStats.avg + vibStats.stdDev * 0.5) {
-          peaks.push({ index: i + 1, Peak: vibValues[i] });
-        }
-      }
-    }
-    return peaks;
-  }, [vibValues, vibStats]);
+  if (!dashboard) {
+    return null;
+  }
 
-  const insight = useMemo(() => {
-    if (mechParams.length === 0) {
-      return 'Upload data with vibration measurements for mechanical health analysis.';
-    }
-    const parts = [];
-    if (vibStats) {
-      parts.push(`Average vibration: ${vibStats.avg.toFixed(2)} mm/s.`);
-      if (anomalies.length > 0) {
-        parts.push(`${anomalies.length} anomalous readings detected (${((anomalies.length / vibValues.length) * 100).toFixed(1)}% of data).`);
-      } else {
-        parts.push('No vibration anomalies detected — mechanical health appears normal.');
-      }
-      if (peakData.length > 0) parts.push(`${peakData.length} significant peaks identified.`);
-    }
-    return parts.join(' ');
-  }, [mechParams, vibStats, anomalies, vibValues, peakData]);
+  const summary = dashboard.summary || {};
 
-  const hasData = mechParams.length > 0;
+  const averageVibration =
+    summary.averageVibration || 0;
+
+  const peakVibration =
+    summary.peakVibration || 0;
+
+  const anomalies =
+    summary.anomalies || 0;
+
+  const stdDeviation =
+    summary.stdDeviation || 0;
+
+  const trendData =
+    dashboard.trendData || [];
+
+  const peakData =
+    dashboard.peakData || [];
+
+  const distData =
+    (dashboard.distributionData || []).map(
+      (item: any) => ({
+        range: item.range,
+        Count: item.count,
+      })
+    );
+
+  const insight =
+    dashboard.insight?.message || "";
+
+  const hasData =
+    trendData.length > 0;
 
   return (
     <div>
@@ -86,40 +85,43 @@ export default function MechanicalPage() {
         insight={insight}
       />
 
-      {hasData && vibStats && (
+      {hasData && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <KPICard label="Avg Vibration" value={formatNumber(vibStats.avg)} unit="mm/s" icon={Activity} color="#2563EB" delay={0.1} />
-          <KPICard label="Peak Vibration" value={formatNumber(vibStats.max)} unit="mm/s" icon={TrendingUp} color="#DC2626" delay={0.15} />
-          <KPICard label="Anomalies" value={anomalies.length.toString()} unit="readings" icon={AlertTriangle} color={anomalies.length > 0 ? '#D97706' : '#059669'} delay={0.2} />
-          <KPICard label="Std Deviation" value={formatNumber(vibStats.stdDev)} unit="mm/s" icon={BarChart3} color="#7C3AED" delay={0.25} />
+          <KPICard label="Avg Vibration" value={averageVibration.toFixed(2)} unit="mm/s" icon={Activity} color="#2563EB" delay={0.1} />
+          <KPICard label="Peak Vibration" value={peakVibration.toFixed(2)} unit="mm/s" icon={TrendingUp} color="#DC2626" delay={0.15} />
+          <KPICard label="Anomalies" value={anomalies.toString()} unit="readings" icon={AlertTriangle} color={anomalies > 0 ? '#D97706' : '#059669'} delay={0.2} />
+          <KPICard label="Std Deviation" value={stdDeviation.toFixed(2)} unit="mm/s" icon={BarChart3} color="#7C3AED" delay={0.25} />
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {mechParams.map((param, i) => (
-          <ParameterModule
-            key={param.originalName}
-            columnSchema={param}
-            records={records}
-            delay={0.15 + i * 0.05}
-            chartType="area"
-            color={CATEGORY_CONFIG.mechanical.color}
-          />
-        ))}
-
+        <AnalyticsChart
+          title="Vibration Trend"
+          description="Vibration readings over time."
+          data={trendData}
+          dataKey="value"
+          xKey="time"
+          xLabel="Time"
+          yLabel="mm/s"
+          type="area"
+          color="#2563EB"
+          unit="mm/s"
+          delay={0.15}
+        />
         {peakData.length > 0 && (
           <AnalyticsChart
-            title="Vibration Peaks"
-            description="Identified vibration peaks exceeding 0.5 standard deviations above mean. Peak frequency and magnitude help diagnose bearing wear."
-            data={peakData}
-            dataKey="Peak"
-            xLabel="Sample"
-            yLabel="mm/s"
-            type="bar"
-            color="#DC2626"
-            unit="mm/s"
-            delay={0.2}
-          />
+          title="Vibration Peaks"
+          description="Identified vibration peaks exceeding 0.5 standard deviations above mean. Peak frequency and magnitude help diagnose bearing wear."
+          data={peakData}
+          dataKey="value"
+          xKey="sample"
+          xLabel="Sample"
+          yLabel="mm/s"
+          type="bar"
+          color="#DC2626"
+          unit="mm/s"
+          delay={0.2}
+        />
         )}
 
         {distData.length > 0 && (
@@ -139,7 +141,7 @@ export default function MechanicalPage() {
       </div>
 
       {/* Anomaly Alert */}
-      {anomalies.length > 0 && vibStats && (
+      {anomalies > 0  && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,8 +153,8 @@ export default function MechanicalPage() {
             <h3 className="text-[15px] font-semibold text-[#92400E]">Anomaly Alert</h3>
           </div>
           <p className="text-[13px] text-[#78350F] leading-relaxed">
-            {anomalies.length} vibration readings exceeded the 2-sigma threshold ({(vibStats.avg + 2 * vibStats.stdDev).toFixed(2)} mm/s).
-            This represents {((anomalies.length / vibValues.length) * 100).toFixed(1)}% of all measurements.
+            {anomalies} vibration readings exceeded the 2-sigma threshold ({(averageVibration + 2 * stdDeviation).toFixed(2)} mm/s).
+            This represents {((anomalies / trendData.length) * 100).toFixed(1)}% of all measurements.
             Recommended actions: inspect bearing surfaces, verify shaft alignment, and check for loose mounting bolts.
           </p>
         </motion.div>

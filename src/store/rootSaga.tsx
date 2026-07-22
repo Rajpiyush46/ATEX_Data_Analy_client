@@ -21,6 +21,7 @@ import oilSaga from "./oil/sagas";
 import watchComparison from "./comparison/sagas";
 import overviewWatcher from "./overview/sagas";
 import testAnalyticsSaga from "./testAnalytics/sagas";
+import mechanicalSaga from "./mechanical/sagas";
 
 export default function* rootSaga() {
  
@@ -34,7 +35,8 @@ export default function* rootSaga() {
     oilSaga(),
     watchComparison(),
     overviewWatcher(),
-    testAnalyticsSaga()
+    testAnalyticsSaga(),
+    mechanicalSaga()
   ]);
       
 

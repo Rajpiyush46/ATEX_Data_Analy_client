@@ -26,6 +26,7 @@ import oilReducer from "./oil/reducer";
 import comparisonReducer from "./comparison/reducer";
 import overviewReducer from "./overview/reducer";
 import testAnalyticsReducer from "./testAnalytics/reducer";
+import mechanicalReducer from "./mechanical/reducer";
 
 
 const rootReducer = combineReducers({
@@ -39,6 +40,7 @@ const rootReducer = combineReducers({
   comparison: comparisonReducer,
   overview: overviewReducer,
   testAnalytics: testAnalyticsReducer,
+  mechanical: mechanicalReducer
 });
 
 
