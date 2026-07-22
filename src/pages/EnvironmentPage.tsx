@@ -66,14 +66,17 @@ export default function EnvironmentPage() {
     {
       originalName: "Ambient temperature",
       normalizedKey: "ambient_temperature",
+      unit: "°C",
     },
     {
       originalName: "Ambient humidity",
       normalizedKey: "ambient_humidity",
+      unit: "%",
     },
     {
       originalName: "Ambient pressure",
       normalizedKey: "ambient_pressure",
+      unit: "hPa",
     },
   ];
 

@@ -87,22 +87,27 @@ export default function OilPage() {
     {
       originalName: "BUG Oil in Pressure",
       normalizedKey: "oil_in_pressure",
+      unit: "bar",
     },
     {
       originalName: "BUG Oil Out Pressure",
       normalizedKey: "oil_out_pressure",
+      unit: "bar",
     },
     {
       originalName: "BUG Oil in Temperature",
       normalizedKey: "oil_in_temperature",
+      unit: "°C",
     },
     {
       originalName: "BUG Oil Out Temperature",
       normalizedKey: "oil_out_temperature",
+      unit: "°C",
     },
     {
       originalName: "BUG Oil Out Flow",
       normalizedKey: "oil_flow",
+      unit: "L/min",
     },
   ];
   console.log(

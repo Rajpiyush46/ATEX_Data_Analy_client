@@ -1,5 +1,3 @@
-
-
 import { AnimatePresence, motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { DataProvider, useData } from "@/store/DataContext";
@@ -17,6 +15,7 @@ import TestsPage from "@/pages/TestsPage";
 import AdvancedPage from "@/pages/AdvancedPage";
 import ReportsPage from "@/pages/ReportsPage";
 import ComparisonPage from "@/pages/ComparisonPage";
+import SubsystemPage from "@/pages/SubsystemPage";
 
 function PageRouter() {
   const { currentPage } = useData();
@@ -32,6 +31,7 @@ function PageRouter() {
     advanced: <AdvancedPage />,
     reports: <ReportsPage />,
     comparison: <ComparisonPage />,
+    subsystem: <SubsystemPage />,
   };
 
   return (

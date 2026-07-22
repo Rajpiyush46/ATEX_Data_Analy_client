@@ -1,4 +1,4 @@
-import type { ColumnSchema, ParameterCategory } from '@/utils/schemaEngine';
+import type { ColumnSchema, ParameterCategory } from "@/utils/schemaEngine";
 
 // Generic record that stores data with original column names
 export interface GeneratorRecord {
@@ -33,13 +33,14 @@ export interface ChartDataPoint {
 }
 
 export type NavigationPage =
-  | 'overview'
-  | 'electrical'
-  | 'performance'
-  | 'oil'
-  | 'environment'
-  | 'mechanical'
-  | 'tests'
-  | 'advanced'
-  | 'comparison'
-  | 'reports';
+  | "overview"
+  | "electrical"
+  | "performance"
+  | "oil"
+  | "environment"
+  | "mechanical"
+  | "tests"
+  | "advanced"
+  | "comparison"
+  | "reports"
+  | "subsystem";

@@ -80,6 +80,7 @@ export default function PerformancePage() {
     {
       originalName: "BUG Speed",
       normalizedKey: "speed",
+      unit: "RPM",
     },
   ];
 
@@ -87,6 +88,7 @@ export default function PerformancePage() {
     {
       originalName: "BUG Torque",
       normalizedKey: "torque",
+      unit: "Nm",
     },
   ];
 
