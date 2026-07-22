@@ -20,7 +20,10 @@ import performanceSaga from "./performance/sagas";
 import oilSaga from "./oil/sagas";
 import watchComparison from "./comparison/sagas";
 import overviewWatcher from "./overview/sagas";
+import testAnalyticsSaga from "./testAnalytics/sagas";
+
 export default function* rootSaga() {
+ 
   yield all([
     excelSaga(),
     vtSaga(),
@@ -31,5 +34,8 @@ export default function* rootSaga() {
     oilSaga(),
     watchComparison(),
     overviewWatcher(),
+    testAnalyticsSaga()
   ]);
+      
+
 }

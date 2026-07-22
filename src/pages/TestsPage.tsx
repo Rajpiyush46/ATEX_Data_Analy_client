@@ -1,10 +1,13 @@
-import { useMemo } from 'react';
+// import { useMemo } from 'react';
 import { PieChart, Pie, Cell, BarChart as ReBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import PageHeader from '@/components/ui/PageHeader';
 import KPICard from '@/components/ui/KPICard';
-import { useData } from '@/store/DataContext';
-import { getTextDistribution, getPassPercentage } from '@/utils/analytics';
+import { useMemo, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getTestAnalyticsRequest } from "@/store/testAnalytics/actions";
+//import { useData } from '@/store/DataContext';
+//import { getTextDistribution, getPassPercentage } from '@/utils/analytics';
 import { FlaskConical, Users, CheckCircle2, XCircle, Settings, Clock, Hash, Activity } from 'lucide-react';
 
 const COLORS = ['#2563EB', '#059669', '#D97706', '#DC2626', '#7C3AED', '#0891B2', '#4F46E5', '#0D9488', '#B45309', '#9333EA'];
@@ -115,127 +118,116 @@ function AnimatedDistChart({ title, desc, data, delay, colorIndex = 0 }: {
 }
 
 export default function TestsPage() {
-  const { data } = useData();
-  if (!data) return null;
+  // const { data } = useData();
+  // if (!data) return null;
 
-  const { records, schema } = data;
+  // const { records, schema } = data;
 
-  // Find specific columns by normalized key
-  const findColumn = (key: string) => {
-    for (const [colName, colSchema] of schema) {
-      if (colSchema.normalizedKey === key) return colName;
-    }
-    return null;
-  };
+  const dispatch = useDispatch();
 
-  const statusColumn = findColumn('test_status');
-  const operatorColumn = findColumn('operator');
-  const conditionColumn = findColumn('test_condition');
-  const modeColumn = findColumn('operating_mode');
-  const uutIdColumn = findColumn('uut_id');
-  const testIdColumn = findColumn('test_id');
-  const timestampColumn = findColumn('timestamp');
+  const {
+    dashboard,
+    loading,
+    error,
+  } = useSelector(
+    (state: any) => state.testAnalytics
+  );
 
-  // Get distributions
-  const statusDist = useMemo(() => statusColumn ? getTextDistribution(records, statusColumn) : {}, [records, statusColumn]);
-  const operatorDist = useMemo(() => operatorColumn ? getTextDistribution(records, operatorColumn) : {}, [records, operatorColumn]);
-  const conditionDist = useMemo(() => conditionColumn ? getTextDistribution(records, conditionColumn) : {}, [records, conditionColumn]);
-  const modeDist = useMemo(() => modeColumn ? getTextDistribution(records, modeColumn) : {}, [records, modeColumn]);
-  const uutDist = useMemo(() => uutIdColumn ? getTextDistribution(records, uutIdColumn) : {}, [records, uutIdColumn]);
+  useEffect(() => {
+    dispatch(
+      getTestAnalyticsRequest({})
+    );
+  }, [dispatch]);
 
-  const passRate = useMemo(() => getPassPercentage(records, schema), [records, schema]);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-  const toChartData = (dist: Record<string, number>) =>
-    Object.entries(dist)
-      .filter(([name]) => name !== 'Unknown' && name.trim() !== '' && name !== 'undefined')
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+  if (error) {
+    return <div>{error}</div>;
+  }
 
-  const statusData = useMemo(() => toChartData(statusDist), [statusDist]);
-  const operatorData = useMemo(() => toChartData(operatorDist), [operatorDist]);
-  const conditionData = useMemo(() => toChartData(conditionDist), [conditionDist]);
-  const modeData = useMemo(() => toChartData(modeDist), [modeDist]);
-  const uutData = useMemo(() => toChartData(uutDist), [uutDist]);
+  if (!dashboard) return null;
 
-  // Calculate pass rate by operator
-  const operatorPassRates = useMemo(() => {
-    if (!statusColumn || !operatorColumn) return [];
-    const operatorStats: Record<string, { pass: number; total: number }> = {};
-    
-    records.forEach(r => {
-      const op = r[operatorColumn] as string;
-      const status = r[statusColumn] as string;
-      if (!op || op === 'Unknown') return;
-      
-      if (!operatorStats[op]) operatorStats[op] = { pass: 0, total: 0 };
-      operatorStats[op].total++;
-      if (/pass/i.test(status || '')) operatorStats[op].pass++;
-    });
+  const summary = dashboard.summary || {};
 
-    return Object.entries(operatorStats)
-      .map(([name, stats]) => ({
-        name,
-        'Pass Rate': Math.round((stats.pass / stats.total) * 100),
-        'Tests': stats.total,
-      }))
-      .sort((a, b) => b['Pass Rate'] - a['Pass Rate']);
-  }, [records, statusColumn, operatorColumn]);
+  const metadata = dashboard.metadata || {};
 
-  // Calculate pass rate by condition
-  const conditionPassRates = useMemo(() => {
-    if (!statusColumn || !conditionColumn) return [];
-    const condStats: Record<string, { pass: number; total: number }> = {};
-    
-    records.forEach(r => {
-      const cond = r[conditionColumn] as string;
-      const status = r[statusColumn] as string;
-      if (!cond || cond === 'Unknown') return;
-      
-      if (!condStats[cond]) condStats[cond] = { pass: 0, total: 0 };
-      condStats[cond].total++;
-      if (/pass/i.test(status || '')) condStats[cond].pass++;
-    });
+  const statusData =
+    dashboard.statusDistribution || [];
 
-    return Object.entries(condStats)
-      .map(([name, stats]) => ({
-        name,
-        'Pass Rate': Math.round((stats.pass / stats.total) * 100),
-      }))
-      .sort((a, b) => b['Pass Rate'] - a['Pass Rate']);
-  }, [records, statusColumn, conditionColumn]);
+  const operatorData =
+    dashboard.operatorActivity || [];
 
-  const totalTests = records.length;
-  const uniqueOperators = operatorData.length;
-  const uniqueConditions = conditionData.length;
-  const uniqueModes = modeData.length;
-  const uniqueUuts = uutData.length;
+  const conditionData =
+    dashboard.testConditions || [];
 
-  // Timestamp range
-  const timestampRange = useMemo(() => {
-    if (!timestampColumn) return null;
-    const timestamps = records
-      .map(r => r[timestampColumn])
-      .filter(t => t)
-      .map(t => new Date(String(t)).getTime())
-      .filter(t => !isNaN(t))
-      .sort((a, b) => a - b);
-    
-    if (timestamps.length < 2) return null;
-    return {
-      start: new Date(timestamps[0]).toLocaleString(),
-      end: new Date(timestamps[timestamps.length - 1]).toLocaleString(),
-    };
-  }, [records, timestampColumn]);
+  const modeData =
+    dashboard.operatingModes || [];
 
-  const insight = useMemo(() => {
-    const parts = [];
-    parts.push(`${totalTests} test records analyzed.`);
-    if (passRate > 0) parts.push(`Overall pass rate: ${passRate}%.`);
-    if (uniqueOperators > 0) parts.push(`${uniqueOperators} operators conducted tests.`);
-    if (uniqueConditions > 0) parts.push(`${uniqueConditions} distinct test conditions.`);
-    if (uniqueModes > 0) parts.push(`${uniqueModes} operating modes.`);
-    return parts.join(' ');
-  }, [totalTests, passRate, uniqueOperators, uniqueConditions, uniqueModes]);
+  const operatorPassRates =
+    (dashboard.operatorPerformance || []).map(
+      (item: any) => ({
+        name: item.name,
+        "Pass Rate": item.passRate,
+        Tests: item.tests,
+      })
+    );
+
+  const conditionPassRates =
+    (dashboard.conditionPerformance || []).map(
+      (item: any) => ({
+        name: item.name,
+        "Pass Rate": item.passRate,
+        Tests: item.tests,
+      })
+    );
+
+  const totalTests =
+    summary.totalTests || 0;
+
+  const passRate =
+    summary.passRate || 0;
+
+  const uniqueOperators =
+    summary.operators || 0;
+
+  const uniqueConditions =
+    summary.conditions || 0;
+
+  const uniqueModes =
+    summary.operatingModes || 0;
+
+  const uniqueUuts =
+    summary.uutUnits || 0;
+
+  const timestampRange =
+    metadata?.startTime &&
+    metadata?.endTime
+      ? {
+          start: metadata.startTime,
+          end: metadata.endTime,
+        }
+      : null;
+
+  const insight = [
+    `${totalTests} test records analyzed.`,
+    passRate > 0
+      ? `Overall pass rate: ${passRate}%.`
+      : "",
+    uniqueOperators > 0
+      ? `${uniqueOperators} operators conducted tests.`
+      : "",
+    uniqueConditions > 0
+      ? `${uniqueConditions} distinct test conditions.`
+      : "",
+    uniqueModes > 0
+      ? `${uniqueModes} operating modes.`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
 
   return (
     <div>
@@ -256,7 +248,7 @@ export default function TestsPage() {
       </div>
 
       {/* Metadata Section */}
-      {(timestampRange || uniqueUuts > 0 || testIdColumn) && (
+      {(metadata || uniqueUuts > 0) && (
         <motion.section 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -284,17 +276,17 @@ export default function TestsPage() {
                     <span className="text-[12px] font-semibold text-text-tertiary uppercase tracking-wider">UUT IDs</span>
                   </div>
                   <div className="text-[13px] text-[#0F172A] font-medium">{uniqueUuts} unique units</div>
-                  <div className="text-[12px] text-[#64748B]">{uutData[0]?.name}, {uutData[1]?.name}...</div>
+                  <div className="text-[12px] text-[#64748B]">{uniqueUuts} Unique UUT IDs</div>
                 </div>
               )}
-              {testIdColumn && (
+              {metadata?.testSessions && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Activity size={14} className="text-[#64748B]" />
                     <span className="text-[12px] font-semibold text-text-tertiary uppercase tracking-wider">Test Sessions</span>
                   </div>
-                  <div className="text-[13px] text-[#0F172A] font-medium">{records.length} records</div>
-                  <div className="text-[12px] text-[#64748B]">From column: {testIdColumn}</div>
+                  <div className="text-[13px] text-[#0F172A] font-medium">{metadata.testSessions} records</div>
+                  <div className="text-[12px] text-[#64748B]">Total Test Sessions</div>
                 </div>
               )}
               <div>
@@ -302,8 +294,8 @@ export default function TestsPage() {
                   <FlaskConical size={14} className="text-[#64748B]" />
                   <span className="text-[12px] font-semibold text-text-tertiary uppercase tracking-wider">Data Points</span>
                 </div>
-                <div className="text-[13px] text-[#0F172A] font-medium">{(records.length * data.columns.length).toLocaleString()}</div>
-                <div className="text-[12px] text-[#64748B]">{records.length} rows × {data.columns.length} columns</div>
+                <div className="text-[13px] text-[#0F172A] font-medium">{metadata.dataPoints?.toLocaleString()}</div>
+                <div className="text-[12px] text-[#64748B]">Backend Calculated Data Points</div>
               </div>
             </div>
           </div>
