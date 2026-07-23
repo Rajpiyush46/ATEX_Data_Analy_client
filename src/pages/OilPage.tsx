@@ -83,33 +83,33 @@ export default function OilPage() {
   //     ),
   //   [schema, records]
   // );
-  const oilParams = [
-    {
-      originalName: "BUG Oil in Pressure",
-      normalizedKey: "oil_in_pressure",
-      unit: "bar",
-    },
-    {
-      originalName: "BUG Oil Out Pressure",
-      normalizedKey: "oil_out_pressure",
-      unit: "bar",
-    },
-    {
-      originalName: "BUG Oil in Temperature",
-      normalizedKey: "oil_in_temperature",
-      unit: "°C",
-    },
-    {
-      originalName: "BUG Oil Out Temperature",
-      normalizedKey: "oil_out_temperature",
-      unit: "°C",
-    },
-    {
-      originalName: "BUG Oil Out Flow",
-      normalizedKey: "oil_flow",
-      unit: "L/min",
-    },
-  ];
+const oilParams = [
+  {
+    originalName: "BugOilPressure",
+    normalizedKey: "oil_in_pressure",
+    unit: "bar",
+  },
+  {
+    originalName: "BugOilOutPressure",
+    normalizedKey: "oil_out_pressure",
+    unit: "bar",
+  },
+  {
+    originalName: "BugOilTemperature",
+    normalizedKey: "oil_in_temperature",
+    unit: "°C",
+  },
+  {
+    originalName: "BugOilOutTemperature",
+    normalizedKey: "oil_out_temperature",
+    unit: "°C",
+  },
+  {
+    originalName: "BugOilOutFlow",
+    normalizedKey: "oil_flow",
+    unit: "L/min",
+  },
+];
   console.log(
     "OIL PARAMS",
     oilParams.map((p) => ({
