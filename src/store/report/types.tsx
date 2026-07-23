@@ -1,0 +1,9 @@
+/**
+ * Report Types
+ */
+
+export const GET_REPORT_REQUEST = "GET_REPORT_REQUEST";
+
+export const GET_REPORT_SUCCESS = "GET_REPORT_SUCCESS";
+
+export const GET_REPORT_FAILURE = "GET_REPORT_FAILURE";

@@ -19,6 +19,7 @@ import {
 
 import { useData } from "@/store/DataContext";
 import type { NavigationPage } from "@/types/generator";
+import ExcelUploader from "./ExcelUploader";
 
 interface NavItem {
   id: NavigationPage;
@@ -66,7 +67,7 @@ const navItems: NavItem[] = [
     icon: Boxes,
     group: "Analytics", // or any group you want
   },
-  
+
   {
     id: "advanced",
     label: "Advanced",
@@ -167,12 +168,16 @@ export default function Navigation() {
           </button>
         )}
 
-        {!data && (
-          <div className="text-text-tertiary flex items-center gap-2 text-sm justify-center">
+        <ExcelUploader>
+          <div
+            className={`w-full flex items-center gap-3 text-[#2563EB]
+    ${isNavExpanded ? "px-3 py-2.5" : "justify-center py-2.5"}`}
+          >
             <Upload size={16} />
-            {isNavExpanded && <span>Upload Data</span>}
+
+            {isNavExpanded && <span>Upload New Excel</span>}
           </div>
-        )}
+        </ExcelUploader>
 
         <button
           onClick={() => setIsNavExpanded(!isNavExpanded)}

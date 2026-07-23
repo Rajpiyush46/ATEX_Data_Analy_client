@@ -22,9 +22,9 @@ import watchComparison from "./comparison/sagas";
 import overviewWatcher from "./overview/sagas";
 import testAnalyticsSaga from "./testAnalytics/sagas";
 import mechanicalSaga from "./mechanical/sagas";
+import reportSaga from "./report/sagas";
 
 export default function* rootSaga() {
- 
   yield all([
     excelSaga(),
     vtSaga(),
@@ -36,8 +36,7 @@ export default function* rootSaga() {
     watchComparison(),
     overviewWatcher(),
     testAnalyticsSaga(),
-    mechanicalSaga()
+    mechanicalSaga(),
+    reportSaga(),
   ]);
-      
-
 }
