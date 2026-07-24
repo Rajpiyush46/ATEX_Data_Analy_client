@@ -1,15 +1,8 @@
 import { useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
 import PageHeader from "@/components/ui/PageHeader";
 import ParameterModule from "@/components/ParameterModule";
-
-// import { useData } from "@/store/DataContext";
-
 import { getParametersByCategory, CATEGORY_CONFIG } from "@/utils/schemaEngine";
-
-import { hasColumnData, getColumnStats } from "@/utils/analytics";
-
 import { getPerformanceRequest } from "@/store/performance/actions";
 
 export default function PerformancePage() {
@@ -43,39 +36,6 @@ export default function PerformancePage() {
     );
   }, [dispatch]);
 
-  // const { data } = useData();
-
-  // if (!data) return null;
-
-  // const { records, schema } = data;
-
-  //  const performanceParams = useMemo(
-  //   () =>
-  //     getParametersByCategory(
-  //       schema,
-  //       "performance"
-  //     ).filter((p) =>
-  //       hasColumnData(records, p.originalName)
-  //     ),
-  //   [schema, records]
-  // );
-
-  // const bugSpeedParams = useMemo(
-  //   () =>
-  //     performanceParams.filter(
-  //       (p) => p.normalizedKey === "speed"
-  //     ),
-  //   [performanceParams]
-  // );
-
-  // const bugTorqueParams = useMemo(
-  //   () =>
-  //     performanceParams.filter(
-  //       (p) => p.normalizedKey === "torque"
-  //     ),
-  //   [performanceParams]
-  // );
-
   const bugSpeedParams = [
     {
       originalName: "BUG Speed",
@@ -91,65 +51,42 @@ export default function PerformancePage() {
       unit: "Nm",
     },
   ];
+  const calculateAverage = (records: any[], fieldName: string) => {
+    if (!records?.length) return 0;
 
-  // const allParams = [
-  //   ...bugSpeedParams,
-  //   ...bugTorqueParams,
-  // ];
-  // const insight = useMemo(() => {
-  //   const parts = [];
+    const values = records
+      .map((item) => Number(item[fieldName]))
+      .filter((value) => !isNaN(value));
 
-  //   if (bugSpeedParams.length > 0) {
-  //     const avgSpeed =
-  //       bugSpeedParams.reduce(
-  //         (sum, p) =>
-  //           sum +
-  //           getColumnStats(
-  //             records,
-  //             p.originalName
-  //           ).avg,
-  //         0
-  //       ) / bugSpeedParams.length;
+    if (!values.length) return 0;
 
-  //     parts.push(
-  //       `Average bug speed across monitored records is ${avgSpeed.toFixed(
-  //         2
-  //       )}.`
-  //     );
-  //   }
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
+  };
 
-  //   if (bugTorqueParams.length > 0) {
-  //     const avgTorque =
-  //       bugTorqueParams.reduce(
-  //         (sum, p) =>
-  //           sum +
-  //           getColumnStats(
-  //             records,
-  //             p.originalName
-  //           ).avg,
-  //         0
-  //       ) / bugTorqueParams.length;
+const avgSpeed = calculateAverage(
+  performanceCharts?.BugSpeed || [],
+  "BUG_Speed"
+);
 
-  //     parts.push(
-  //       `Average bug torque across monitored records is ${avgTorque.toFixed(
-  //         2
-  //       )}.`
-  //     );
-  //   }
+const avgTorque = calculateAverage(
+  performanceCharts?.BugTorque || [],
+  "BUG_Torque"
+);
 
-  //   return (
-  //     parts.join(" ") ||
-  //     "Upload performance-related data to view analytics."
-  //   );
-  // }, [
-  //   records,
-  //   bugSpeedParams,
-  //   bugTorqueParams,
-  // ]);
+  const insight = useMemo(() => {
+    const parts = [];
 
-  const insight =
-    "Performance analytics loaded dynamically from backend APIs for Bug Speed and Bug Torque.";
-  // const hasData = allParams.length > 0;
+    if (avgSpeed > 0) {
+      parts.push(`Average BUG speed is ${avgSpeed.toFixed(2)} RPM.`);
+    }
+
+    if (avgTorque > 0) {
+      parts.push(`Average BUG torque is ${avgTorque.toFixed(2)} Nm.`);
+    }
+
+    return parts.join(" ") || "No performance data available.";
+  }, [avgSpeed, avgTorque]);
+
   const hasData =
     !!performanceCharts?.BugSpeed?.length ||
     !!performanceCharts?.BugTorque?.length;
@@ -162,57 +99,27 @@ export default function PerformancePage() {
         insight={insight}
       />
 
-      {/* Bug Speed */}
-      {bugSpeedParams.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-lg font-semibold text-[#0F172A] mb-1">
-            Bug Speed Analysis
-          </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {bugSpeedParams.length > 0 && (
+          <ParameterModule
+            columnSchema={bugSpeedParams[0] as any}
+            records={performanceCharts?.BugSpeed || []}
+            delay={0.1}
+            chartType="line"
+            color={CATEGORY_CONFIG.performance?.color || "#3B82F6"}
+          />
+        )}
 
-          <p className="text-[13px] text-[#64748B] mb-6">
-            Trend analysis and monitoring of bug speed measurements.
-          </p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {bugSpeedParams.map((param, i) => (
-              <ParameterModule
-                key={param.originalName}
-                columnSchema={param as any}
-                records={performanceCharts?.BugSpeed || []}
-                delay={0.1 + i * 0.05}
-                chartType="line"
-                color={CATEGORY_CONFIG.performance?.color || "#3B82F6"}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Bug Torque */}
-      {bugTorqueParams.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-lg font-semibold text-[#0F172A] mb-1">
-            Bug Torque Analysis
-          </h2>
-
-          <p className="text-[13px] text-[#64748B] mb-6">
-            Trend analysis and monitoring of bug torque measurements.
-          </p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {bugTorqueParams.map((param, i) => (
-              <ParameterModule
-                key={param.originalName}
-                columnSchema={param as any}
-                records={performanceCharts?.BugTorque || []}
-                delay={0.1 + i * 0.05}
-                chartType="line"
-                color={CATEGORY_CONFIG.performance.color || "#10B981"}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+        {bugTorqueParams.length > 0 && (
+          <ParameterModule
+            columnSchema={bugTorqueParams[0] as any}
+            records={performanceCharts?.BugTorque || []}
+            delay={0.15}
+            chartType="line"
+            color={CATEGORY_CONFIG.performance?.color || "#10B981"}
+          />
+        )}
+      </div>
 
       {!hasData && (
         <div className="bg-white rounded-xl border border-border p-12 text-center">

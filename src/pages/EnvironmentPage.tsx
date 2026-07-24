@@ -1,23 +1,15 @@
 import { useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
+
 import PageHeader from "@/components/ui/PageHeader";
 import ParameterModule from "@/components/ParameterModule";
 import KPICard from "@/components/ui/KPICard";
-// import { useData } from "@/store/DataContext";
-import {
-  getColumnStats,
-  getColumnValues,
-  hasColumnData,
-  computeCorrelation,
-  formatNumber,
-} from "@/utils/analytics";
+import { formatNumber } from "@/utils/analytics";
 import { CATEGORY_CONFIG, getParametersByCategory } from "@/utils/schemaEngine";
 import { Thermometer, Droplets, Gauge } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAmbientRequest } from "@/store/ambient/actions";
 
 export default function EnvironmentPage() {
-  // const { data } = useData();
   const dispatch = useDispatch();
 
   const ambientCharts = useSelector((state: any) => state.ambient?.charts);
@@ -50,18 +42,7 @@ export default function EnvironmentPage() {
       })
     );
   }, [dispatch]);
-  // if (!data) return null;
 
-  // const { records, schema } = data;
-
-  // Get environmental parameters
-  // const envParams = useMemo(
-  //   () =>
-  //     getParametersByCategory(schema, "environmental").filter((p) =>
-  //       hasColumnData(records, p.originalName)
-  //     ),
-  //   [schema, records]
-  // );
   const envParams = [
     {
       originalName: "Ambient temperature",
@@ -79,115 +60,73 @@ export default function EnvironmentPage() {
       unit: "hPa",
     },
   ];
-
-  // Find specific parameters these shpuld be taken form the contsraints.js
-  // const tempParam = envParams.find(
-  //   (p) => p.normalizedKey === "ambient_temperature"
-  // );
-  // const humidityParam = envParams.find(
-  //   (p) => p.normalizedKey === "ambient_humidity"
-  // );
-  // const pressureParam = envParams.find(
-  //   (p) => p.normalizedKey === "ambient_pressure"
-  // );
   const tempParam = envParams[0];
   const humidityParam = envParams[1];
   const pressureParam = envParams[2];
+  const calculateAverage = (records: any[], fieldName: string) => {
+    if (!records?.length) return 0;
 
-  // const tempStats = tempParam
-  //   ? getColumnStats(records, tempParam.originalName)
-  //   : null;
-  // const humidityStats = humidityParam
-  //   ? getColumnStats(records, humidityParam.originalName)
-  //   : null;
-  // const pressureStats = pressureParam
-  //   ? getColumnStats(records, pressureParam.originalName)
-  //   : null;
-  const calculateAverage = (
-  records: any[],
-  fieldName: string
-) => {
-  if (!records?.length) return 0;
+    const values = records
+      .map((item) => Number(item[fieldName]))
+      .filter((value) => !isNaN(value));
 
-  const values = records
-    .map((item) => Number(item[fieldName]))
-    .filter((value) => !isNaN(value));
+    if (!values.length) return 0;
 
-  if (!values.length) return 0;
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
+  };
+  const tempStats = {
+    avg: calculateAverage(
+      ambientCharts?.Ambient_temperature || [],
+      "Ambient_temperature"
+    ),
+  };
 
-  return (
-    values.reduce(
-      (sum, value) => sum + value,
-      0
-    ) / values.length
-  );
-};
-const tempStats = {
-  avg: calculateAverage(
-    ambientCharts?.Ambient_temperature || [],
-    "Ambient_temperature"
-  ),
-};
+  const humidityStats = {
+    avg: calculateAverage(
+      ambientCharts?.Ambient_humidity || [],
+      "Ambient_humidity"
+    ),
+  };
 
-const humidityStats = {
-  avg: calculateAverage(
-    ambientCharts?.Ambient_humidity || [],
-    "Ambient_humidity"
-  ),
-};
+  const pressureStats = {
+    avg: calculateAverage(
+      ambientCharts?.Ambient_pressure || [],
+      "Ambient_pressure"
+    ),
+  };
 
-const pressureStats = {
-  avg: calculateAverage(
-    ambientCharts?.Ambient_pressure || [],
-    "Ambient_pressure"
-  ),
-};
+  const insight = useMemo(() => {
+    const parts = [];
 
+    if (tempStats?.avg > 0) {
+      parts.push(
+        `Average ambient temperature is ${tempStats.avg.toFixed(2)}°C.`
+      );
+    }
 
-  // Check correlation with speed if available
-  // const speedCorrelation = useMemo(() => {
-  //   if (!tempParam) return null;
-  //   const performanceParams = getParametersByCategory(schema, "performance");
-  //   const speedParam = performanceParams.find(
-  //     (p) => p.normalizedKey === "speed"
-  //   );
-  //   if (!speedParam || !hasColumnData(records, speedParam.originalName))
-  //     return null;
+    if (humidityStats?.avg > 0) {
+      parts.push(
+        `Average relative humidity is ${humidityStats.avg.toFixed(2)}%.`
+      );
+    }
 
-  //   const tempVals = getColumnValues(records, tempParam.originalName);
-  //   const speedVals = getColumnValues(records, speedParam.originalName);
-  //   return computeCorrelation(tempVals, speedVals);
-  // }, [records, schema, tempParam]);
-  const speedCorrelation = null;
+    if (pressureStats?.avg > 0) {
+      parts.push(
+        `Average atmospheric pressure is ${pressureStats.avg.toFixed(2)} hPa.`
+      );
+    }
 
-  // const insight = useMemo(() => {
-  //   const parts = [];
-  //   if (tempStats) {
-  //     parts.push(
-  //       `Ambient temperature range: ${tempStats.min.toFixed(1)}°C to ${tempStats.max.toFixed(1)}°C (avg: ${tempStats.avg.toFixed(1)}°C).`
-  //     );
-  //   }
-  //   if (speedCorrelation !== null) {
-  //     const abs = Math.abs(speedCorrelation);
-  //     if (abs > 0.5)
-  //       parts.push(
-  //         `Strong ${speedCorrelation > 0 ? "positive" : "negative"} correlation (${speedCorrelation.toFixed(2)}) between temperature and speed.`
-  //       );
-  //   }
-  //   if (humidityStats && humidityStats.avg > 70) {
-  //     parts.push(
-  //       "High humidity conditions detected — monitor for moisture ingress."
-  //     );
-  //   }
-  //   if (envParams.length === 0) {
-  //     parts.push(
-  //       "Upload data with environmental parameters for impact analysis."
-  //     );
-  //   }
-  //   return parts.join(" ");
-  // }, [tempStats, humidityStats, speedCorrelation, envParams]);
-  const insight =
-    "Environmental analytics loaded from backend APIs for Temperature, Humidity and Pressure.";
+    if (humidityStats?.avg > 70) {
+      parts.push(
+        "High humidity conditions detected. Moisture ingress monitoring is recommended."
+      );
+    }
+
+    return (
+      parts.join(" ") ||
+      "Upload environmental data to view ambient condition insights."
+    );
+  }, [tempStats?.avg, humidityStats?.avg, pressureStats?.avg]);
   const hasData = Object.keys(ambientCharts || {}).length > 0;
 
   return (
@@ -251,30 +190,6 @@ const pressureStats = {
           );
         })}
       </div>
-
-      {/* Impact Analysis */}
-      {speedCorrelation !== null && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="bg-white rounded-xl border border-border p-6"
-        >
-          <h3 className="text-[15px] font-semibold text-[#0F172A] mb-1">
-            Environmental Impact Analysis
-          </h3>
-          <p className="text-[13px] text-[#64748B] leading-relaxed">
-            The correlation between ambient temperature and generator speed is{" "}
-            <strong>{speedCorrelation.toFixed(3)}</strong>.
-            {Math.abs(speedCorrelation) > 0.5
-              ? " This indicates a significant environmental influence on generator performance. Temperature-related derating should be considered in operational planning."
-              : " This suggests minimal direct environmental impact on speed regulation, indicating effective governor compensation for ambient conditions."}
-            {humidityStats && humidityStats.avg > 60
-              ? ` Average humidity of ${humidityStats.avg.toFixed(1)}% is elevated — regular insulation resistance testing is recommended.`
-              : ""}
-          </p>
-        </motion.div>
-      )}
 
       {!hasData && (
         <div className="bg-white rounded-xl border border-border p-12 text-center">

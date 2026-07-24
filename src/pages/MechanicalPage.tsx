@@ -1,11 +1,8 @@
-//import { useMemo } from 'react';
+
 import { motion } from 'framer-motion';
 import PageHeader from '@/components/ui/PageHeader';
 import AnalyticsChart from '@/components/ui/AnalyticsChart';
 import KPICard from '@/components/ui/KPICard';
-//import { useData } from '@/store/DataContext';
-// import { getColumnStats, getColumnValues, hasColumnData, detectAnomalies, formatNumber } from '@/utils/analytics';
-// import { CATEGORY_CONFIG, getParametersByCategory } from '@/utils/schemaEngine';
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
