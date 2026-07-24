@@ -103,9 +103,46 @@ export default function EnvironmentPage() {
   // const pressureStats = pressureParam
   //   ? getColumnStats(records, pressureParam.originalName)
   //   : null;
-  const tempStats = { avg: 0 };
-  const humidityStats = { avg: 0 };
-  const pressureStats = { avg: 0 };
+  const calculateAverage = (
+  records: any[],
+  fieldName: string
+) => {
+  if (!records?.length) return 0;
+
+  const values = records
+    .map((item) => Number(item[fieldName]))
+    .filter((value) => !isNaN(value));
+
+  if (!values.length) return 0;
+
+  return (
+    values.reduce(
+      (sum, value) => sum + value,
+      0
+    ) / values.length
+  );
+};
+const tempStats = {
+  avg: calculateAverage(
+    ambientCharts?.Ambient_temperature || [],
+    "Ambient_temperature"
+  ),
+};
+
+const humidityStats = {
+  avg: calculateAverage(
+    ambientCharts?.Ambient_humidity || [],
+    "Ambient_humidity"
+  ),
+};
+
+const pressureStats = {
+  avg: calculateAverage(
+    ambientCharts?.Ambient_pressure || [],
+    "Ambient_pressure"
+  ),
+};
+
 
   // Check correlation with speed if available
   // const speedCorrelation = useMemo(() => {
