@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+// import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageHeader from '@/components/ui/PageHeader';
 import ReportViewer from '@/components/ReportViewer';
-import { useData } from '@/store/DataContext';
-import { exportToCSV, exportToXLSX, generateReportText } from '@/utils/exportUtils';
-import { getColumnStats, hasColumnData, computeHealthScore, getPassPercentage, getTextDistribution, formatNumber } from '@/utils/analytics';
-import { FileText, Download, FileSpreadsheet, File, CheckCircle2, Eye, FileType } from 'lucide-react';
-import { saveAs } from 'file-saver';
+//import { useData } from '@/store/DataContext';
+
+//import { getColumnStats, hasColumnData, computeHealthScore, getPassPercentage, getTextDistribution, formatNumber } from '@/utils/analytics';
+import { FileText, Download, FileSpreadsheet, File, Eye, FileType } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+import {
+  getReportRequest,
+} from "@/store/report/actions";
 
 interface ReportFormat {
   id: string;
@@ -26,46 +31,56 @@ const formats: ReportFormat[] = [
 ];
 
 export default function ReportsPage() {
-  const { data } = useData();
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [viewerOpen, setViewerOpen] = useState(false);
+ const dispatch = useDispatch();
 
-  if (!data) return null;
-  const { records, schema, numericParameters } = data;
+  const [previewOpen, setPreviewOpen] =
+    useState(false);
 
-  const healthScore = useMemo(() => computeHealthScore(records, schema), [records, schema]);
-  const passRate = useMemo(() => getPassPercentage(records, schema), [records, schema]);
+  const [viewerOpen, setViewerOpen] =
+    useState(false);
 
-  const statusColumn = useMemo(() => {
-    for (const [colName, colSchema] of schema) {
-      if (colSchema.normalizedKey === 'test_status') return colName;
-    }
+  const {
+    data,
+    loading,
+    error,
+  } = useSelector(
+    (state: any) => state.report
+  );
+
+  useEffect(() => {
+    dispatch(getReportRequest());
+  }, [dispatch]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!data) {
     return null;
-  }, [schema]);
+  }
 
-  const statusDist = useMemo(() => 
-    statusColumn ? getTextDistribution(records, statusColumn) : {}
-  , [records, statusColumn]);
+  const fileName = data.fileName || "";
 
-  const availableParams = useMemo(() =>
-    numericParameters.filter(p => hasColumnData(records, p.originalName))
-  , [numericParameters, records]);
+  const uploadDate = data.uploadDate || "";
 
-  const handleExport = (format: string) => {
-    const baseName = `Generator_Report_${new Date().toISOString().slice(0, 10)}`;
-    switch (format) {
-      case 'xlsx': exportToXLSX(records, baseName); break;
-      case 'csv': exportToCSV(records, baseName); break;
-      case 'txt': 
-      case 'pdf':
-      case 'docx':
-      {
-        const text = generateReportText(records, data.fileName);
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
-        saveAs(blob, `${baseName}.txt`);
-        break;
-      }
-    }
+  const totalRecords = data.totalRecords || 0;
+
+  const totalColumns = data.totalColumns || 0;
+
+  const categories = data.categories || 0;
+
+  const healthScore = data.healthScore || 0;
+
+  const passRate = data.passRate || 0;
+
+  const statistics = data.statistics || [];
+
+  const handleExport = (format?: string) => {
+  console.log("Export coming soon", format);
   };
 
   return (
@@ -73,7 +88,7 @@ export default function ReportsPage() {
       <PageHeader
         title="Report Center"
         description="Generate, preview, and download comprehensive reports in multiple formats. All reports include full statistical summaries and data quality metrics."
-        insight={`Report generated from ${data.fileName} with ${data.totalRecords.toLocaleString()} records and ${availableParams.length} parameters.`}
+        insight={`Report generated from ${fileName} with ${totalRecords.toLocaleString()} records and ${statistics.length} parameters.`}
       />
 
       {/* View Report Button */}
@@ -174,7 +189,7 @@ export default function ReportsPage() {
               <div>
                 <h3 className="text-[15px] font-bold text-[#0F172A]">Generator Analytics Report</h3>
                 <p className="text-[12px] text-[#64748B] mt-0.5">
-                  {data.fileName} • {new Date(data.uploadDate).toLocaleDateString()} • {data.totalRecords.toLocaleString()} records
+                  {fileName} • {new Date(uploadDate).toLocaleDateString()} • {totalRecords.toLocaleString()} records
                 </p>
               </div>
               <div className="flex items-center gap-6">
@@ -190,25 +205,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* Status Distribution */}
-          {Object.keys(statusDist).length > 0 && Object.keys(statusDist).some(k => k !== 'Unknown') && (
-            <div className="px-6 py-4 border-b border-[#F1F5F9]">
-              <div className="text-[12px] font-semibold text-text-tertiary uppercase tracking-wider mb-3">Status Breakdown</div>
-              <div className="flex flex-wrap gap-4">
-                {Object.entries(statusDist).filter(([k]) => k !== 'Unknown').map(([status, count]) => (
-                  <motion.div 
-                    key={status} 
-                    className="flex items-center gap-2"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <CheckCircle2 size={13} className={/pass/i.test(status) ? 'text-[#059669]' : 'text-text-tertiary'} />
-                    <span className="text-[13px] font-medium text-[#0F172A]">{status}</span>
-                    <span className="text-[12px] text-text-tertiary tabular-nums font-semibold">{count}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          )}
+          
 
           {/* Parameter Table */}
           <AnimatePresence>
@@ -234,25 +231,42 @@ export default function ReportsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {availableParams.map((param, i) => {
-                        const stats = getColumnStats(records, param.originalName);
-                        return (
-                          <motion.tr 
-                            key={param.originalName} 
-                            className={i % 2 === 0 ? 'bg-[#FAFBFD]' : ''}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.02 }}
+                      {statistics.map(
+                        (stat: any, i: number) => (
+                          <motion.tr
+                            key={stat.parameter}
+                            className={
+                              i % 2 === 0
+                                ? "bg-[#FAFBFD]"
+                                : ""
+                            }
                           >
-                            <td className="py-2.5 font-medium text-[#0F172A]">{param.originalName}</td>
-                            <td className="py-2.5 text-right text-[#475569] tabular-nums">{formatNumber(stats.min)}</td>
-                            <td className="py-2.5 text-right text-[#475569] tabular-nums">{formatNumber(stats.max)}</td>
-                            <td className="py-2.5 text-right text-accent font-semibold tabular-nums">{formatNumber(stats.avg)}</td>
-                            <td className="py-2.5 text-right text-[#475569] tabular-nums">{formatNumber(stats.stdDev)}</td>
-                            <td className="py-2.5 text-right text-text-tertiary">{param.unit || '—'}</td>
+                            <td className="py-2.5 font-medium text-[#0F172A]">
+                              {stat.parameter}
+                            </td>
+
+                            <td className="py-2.5 text-right text-[#475569]">
+                              {stat.min}
+                            </td>
+
+                            <td className="py-2.5 text-right text-[#475569]">
+                              {stat.max}
+                            </td>
+
+                            <td className="py-2.5 text-right text-accent font-semibold">
+                              {Number(stat.avg).toFixed(2)}
+                            </td>
+
+                            <td className="py-2.5 text-right text-[#475569]">
+                              {Number(stat.stdDev).toFixed(2)}
+                            </td>
+
+                            <td className="py-2.5 text-right text-text-tertiary">
+                              {stat.unit || "—"}
+                            </td>
                           </motion.tr>
-                        );
-                      })}
+                        )
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -270,7 +284,7 @@ export default function ReportsPage() {
                 onClick={() => setPreviewOpen(true)}
                 className="text-[13px] text-accent font-medium hover:underline"
               >
-                Click to see {availableParams.length} parameter statistics
+                 Click to see {statistics.length} parameter statistics
               </button>
             </motion.div>
           )}
@@ -289,10 +303,22 @@ export default function ReportsPage() {
         <p className="text-[13px] text-[#64748B] mb-4">Overview of data completeness and mapping quality.</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { label: 'Total Records', value: data.totalRecords.toLocaleString() },
-            { label: 'Total Columns', value: data.columns.length.toString() },
-            { label: 'Numeric Parameters', value: availableParams.length.toString() },
-            { label: 'Categories', value: data.schemaByCategory.size.toString() },
+            {
+              label: "Total Records",
+              value: totalRecords.toLocaleString(),
+            },
+            {
+              label: "Total Columns",
+              value: totalColumns.toString(),
+            },
+            {
+              label: "Numeric Parameters",
+              value: statistics.length.toString(),
+            },
+            {
+              label: "Categories",
+              value: categories.toString(),
+            },
           ].map((item, i) => (
             <motion.div
               key={i}

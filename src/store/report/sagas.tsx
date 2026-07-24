@@ -8,11 +8,21 @@ import { getReportSummary } from "@/service/report.service";
 
 function* getReportSaga(): any {
   try {
-    const response = yield call(getReportSummary);
+    const response = yield call(
+      getReportSummary
+    );
 
-    yield put(getReportSuccess(response));
+    yield put(
+      getReportSuccess(
+        response.data
+      )
+    );
   } catch (error: any) {
-    yield put(getReportFailure(error.message));
+    yield put(
+      getReportFailure(
+        error.message
+      )
+    );
   }
 }
 
