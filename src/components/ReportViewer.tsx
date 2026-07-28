@@ -1,8 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Download, FileText, Maximize2, Minimize2 } from 'lucide-react';
-import { useData } from '@/store/DataContext';
-import { getColumnStats, hasColumnData, computeHealthScore, getPassPercentage, getTextDistribution, formatNumber } from '@/utils/analytics';
+//import { useData } from '@/store/DataContext';
+//import { getColumnStats, hasColumnData, computeHealthScore, getPassPercentage, getTextDistribution, formatNumber } from '@/utils/analytics';
+import { useSelector } from "react-redux";
+
 
 interface ReportViewerProps {
   isOpen: boolean;
@@ -11,33 +13,37 @@ interface ReportViewerProps {
 }
 
 export default function ReportViewer({ isOpen, onClose, onDownload }: ReportViewerProps) {
-  const { data } = useData();
+  const {
+    data,
+  } = useSelector(
+    (state: any) => state.report
+  );
   const [zoom, setZoom] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
   if (!data) return null;
 
-  const { records, schema, numericParameters } = data;
+  const fileName = data.fileName || "";
+
+  const uploadDate = data.uploadDate || "";
+
+  const totalRecords = data.totalRecords || 0;
+
+  const totalColumns = data.totalColumns || 0;
+
+  const healthScore = data.healthScore || 0;
+
+  const passRate = data.passRate || 0;
+
+  const statistics = data.statistics || [];
+
+  const categories = data.categories || 0;
+
+  const columns = data.columns || [];
+
   const totalPages = 3;
 
-  const healthScore = useMemo(() => computeHealthScore(records, schema), [records, schema]);
-  const passRate = useMemo(() => getPassPercentage(records, schema), [records, schema]);
-  
-  const statusColumn = useMemo(() => {
-    for (const [colName, colSchema] of schema) {
-      if (colSchema.normalizedKey === 'test_status') return colName;
-    }
-    return null;
-  }, [schema]);
-
-  const statusDist = useMemo(() => 
-    statusColumn ? getTextDistribution(records, statusColumn) : {}
-  , [records, statusColumn]);
-
-  const availableParams = useMemo(() =>
-    numericParameters.filter(p => hasColumnData(records, p.originalName))
-  , [numericParameters, records]);
 
   const formats = [
     { id: 'pdf', label: 'PDF' },
@@ -83,7 +89,7 @@ export default function ReportViewer({ isOpen, onClose, onDownload }: ReportView
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-[#0F172A]">Generator Analytics Report</h2>
-                  <p className="text-[12px] text-[#64748B]">{data.fileName} • {new Date(data.uploadDate).toLocaleDateString()}</p>
+                  <p className="text-[12px] text-[#64748B]">{fileName} • {new Date(uploadDate).toLocaleDateString()}</p>
                 </div>
               </div>
               
@@ -164,9 +170,9 @@ export default function ReportViewer({ isOpen, onClose, onDownload }: ReportView
                       <h1 className="text-3xl font-bold text-[#0F172A] mb-2">Generator Analytics Report</h1>
                       <p className="text-[#64748B] text-lg">Comprehensive Performance Analysis</p>
                       <div className="mt-4 flex justify-center gap-6 text-[14px] text-[#475569]">
-                        <span>File: <strong>{data.fileName}</strong></span>
-                        <span>Date: <strong>{new Date(data.uploadDate).toLocaleDateString()}</strong></span>
-                        <span>Records: <strong>{data.totalRecords.toLocaleString()}</strong></span>
+                        <span>File: <strong>{fileName}</strong></span>
+                        <span>Date: <strong>{new Date(uploadDate).toLocaleDateString()}</strong></span>
+                        <span>Records: <strong>{totalRecords.toLocaleString()}</strong></span>
                       </div>
                     </div>
 
@@ -186,29 +192,12 @@ export default function ReportViewer({ isOpen, onClose, onDownload }: ReportView
                           <div className="text-[13px] text-[#64748B] font-medium">Pass Rate</div>
                         </div>
                         <div className="p-6 bg-[#EFF6FF] rounded-xl text-center">
-                          <div className="text-4xl font-bold text-accent mb-1">{availableParams.length}</div>
+                          <div className="text-4xl font-bold text-accent mb-1">{statistics.length}</div>
                           <div className="text-[13px] text-[#64748B] font-medium">Parameters</div>
                         </div>
                       </div>
                     </section>
 
-                    {/* Status Distribution */}
-                    {Object.keys(statusDist).length > 0 && (
-                      <section className="mb-8">
-                        <h2 className="text-xl font-bold text-[#0F172A] mb-4 flex items-center gap-2">
-                          <div className="w-1 h-6 bg-[#059669] rounded-full" />
-                          Test Status Distribution
-                        </h2>
-                        <div className="grid grid-cols-4 gap-4">
-                          {Object.entries(statusDist).filter(([k]) => k !== 'Unknown').map(([status, count], i) => (
-                            <div key={i} className="p-4 bg-[#FAFBFD] rounded-lg border border-border">
-                              <div className="text-2xl font-bold text-[#0F172A]">{count}</div>
-                              <div className="text-[13px] text-[#64748B]">{status}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    )}
 
                     <div className="text-center text-[12px] text-text-tertiary mt-auto pt-8">
                       Page 1 of {totalPages}
@@ -240,19 +229,38 @@ export default function ReportViewer({ isOpen, onClose, onDownload }: ReportView
                         </tr>
                       </thead>
                       <tbody>
-                        {availableParams.slice(0, 15).map((param, i) => {
-                          const stats = getColumnStats(records, param.originalName);
-                          return (
-                            <tr key={i} className={`border-b border-[#F1F5F9] ${i % 2 === 0 ? 'bg-[#FAFBFD]' : ''}`}>
-                              <td className="py-3 font-medium text-[#0F172A]">{param.originalName}</td>
-                              <td className="py-3 text-right text-[#475569] tabular-nums">{formatNumber(stats.min)}</td>
-                              <td className="py-3 text-right text-[#475569] tabular-nums">{formatNumber(stats.max)}</td>
-                              <td className="py-3 text-right text-accent font-semibold tabular-nums">{formatNumber(stats.avg)}</td>
-                              <td className="py-3 text-right text-[#475569] tabular-nums">{formatNumber(stats.stdDev)}</td>
-                              <td className="py-3 text-right text-text-tertiary">{param.unit || '—'}</td>
+                        {statistics.map((stat: any, i: number) => (
+                            <tr
+                              key={stat.parameter}
+                              className={`border-b border-[#F1F5F9] ${
+                                i % 2 === 0 ? "bg-[#FAFBFD]" : ""
+                              }`}
+                            >
+                              <td className="py-3 font-medium text-[#0F172A]">
+                                {stat.parameter}
+                              </td>
+
+                              <td className="py-3 text-right">
+                                {stat.min}
+                              </td>
+
+                              <td className="py-3 text-right">
+                                {stat.max}
+                              </td>
+
+                              <td className="py-3 text-right text-accent font-semibold">
+                                {Number(stat.avg).toFixed(2)}
+                              </td>
+
+                              <td className="py-3 text-right">
+                                {Number(stat.stdDev).toFixed(2)}
+                              </td>
+
+                              <td className="py-3 text-right">
+                                {stat.unit || "—"}
+                              </td>
                             </tr>
-                          );
-                        })}
+                          ))}
                       </tbody>
                     </table>
 
@@ -276,26 +284,26 @@ export default function ReportViewer({ isOpen, onClose, onDownload }: ReportView
                     
                     <div className="grid grid-cols-2 gap-6 mb-8">
                       <div className="p-6 bg-[#F8FAFC] rounded-xl">
-                        <div className="text-3xl font-bold text-[#0F172A] mb-1">{data.totalRecords.toLocaleString()}</div>
+                        <div className="text-3xl font-bold text-[#0F172A] mb-1">{totalRecords.toLocaleString()}</div>
                         <div className="text-[13px] text-[#64748B] font-medium">Total Records</div>
                       </div>
                       <div className="p-6 bg-[#F8FAFC] rounded-xl">
-                        <div className="text-3xl font-bold text-[#0F172A] mb-1">{data.columns.length}</div>
+                        <div className="text-3xl font-bold text-[#0F172A] mb-1">{totalColumns}</div>
                         <div className="text-[13px] text-[#64748B] font-medium">Total Columns</div>
                       </div>
                       <div className="p-6 bg-[#F8FAFC] rounded-xl">
-                        <div className="text-3xl font-bold text-[#0F172A] mb-1">{availableParams.length}</div>
+                        <div className="text-3xl font-bold text-[#0F172A] mb-1">{statistics.length}</div>
                         <div className="text-[13px] text-[#64748B] font-medium">Numeric Parameters</div>
                       </div>
                       <div className="p-6 bg-[#F8FAFC] rounded-xl">
-                        <div className="text-3xl font-bold text-[#0F172A] mb-1">{data.schemaByCategory.size}</div>
+                        <div className="text-3xl font-bold text-[#0F172A] mb-1">{categories}</div>
                         <div className="text-[13px] text-[#64748B] font-medium">Categories Detected</div>
                       </div>
                     </div>
 
                     <h3 className="text-lg font-bold text-[#0F172A] mb-4">Detected Columns</h3>
                     <div className="flex flex-wrap gap-2">
-                      {data.columns.map((col, i) => (
+                      {columns.map((col: string, i: number) => (
                         <span key={i} className="px-3 py-1.5 bg-[#EFF6FF] text-accent text-[12px] font-medium rounded-lg">
                           {col}
                         </span>

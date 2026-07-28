@@ -79,8 +79,14 @@ export default function ReportsPage() {
 
   const statistics = data.statistics || [];
 
+
   const handleExport = (format?: string) => {
-  console.log("Export coming soon", format);
+    if (!format) return;
+
+    window.open(
+      `http://localhost:3000/api/report-download/${format}`,
+      "_blank"
+    );
   };
 
   return (
